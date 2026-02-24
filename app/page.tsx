@@ -1,5 +1,5 @@
-import { Card } from "@/components/ui/card";
+import { redirect } from "next/navigation";
 
 export default function Home() {
-  return <Card>hello</Card>;
+  redirect("/public/login");
 }

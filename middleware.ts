@@ -1,0 +1,28 @@
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+
+export function middleware(request: NextRequest) {
+  const token = request.cookies.get("access_token")?.value;
+
+  const isAuthPage = request.nextUrl.pathname.startsWith("/public");
+  const isDashboard = request.nextUrl.pathname.startsWith("/dashboard");
+
+  // Not logged in → trying to access dashboard
+  if (!token && isDashboard) {
+    console.log("masuk sini");
+    return NextResponse.redirect(new URL("/public/login", request.url));
+  }
+
+  // Logged in → trying to access login
+  if (token && isAuthPage) {
+    console.log("masuk sini aha");
+    return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
+
+  console.log(" gok masuk sini");
+  return NextResponse.next();
+}
+
+export const config = {
+  matcher: ["/dashboard/:path*", "/public/login"],
+};
