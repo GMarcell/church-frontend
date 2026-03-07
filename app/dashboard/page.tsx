@@ -1,3 +1,5 @@
+import Dashboard from "@/components/dashboard";
+
 export default function DashboardPage() {
-  return <div>hwloo dashboard</div>;
+  return <Dashboard />;
 }

@@ -11,18 +11,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useRouter } from "next/navigation";
-import axios from "axios";
+import { logout } from "@/services/auth";
 
 export function Navbar() {
   const router = useRouter();
 
   const handleLogout = async () => {
     try {
-      await axios.post(
-        "http://localhost:3000/api/auth/logout",
-        {},
-        { withCredentials: true },
-      );
+      await logout();
 
       router.push("/public/login");
       router.refresh();

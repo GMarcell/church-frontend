@@ -15,3 +15,7 @@ interface LoginResponse {
 export const login = async (data: LoginDto) => {
   return api.post<LoginResponse, LoginDto>("auth/login", data);
 };
+
+export const logout = async () => {
+  return api.post<LoginResponse>("auth/logout");
+};
