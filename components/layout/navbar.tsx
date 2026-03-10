@@ -10,11 +10,14 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { logout } from "@/services/auth";
+import { toTitleCase } from "@/lib/helper";
 
 export function Navbar() {
   const router = useRouter();
+  const pathname = usePathname();
+  const segment = pathname.split("/").filter(Boolean).pop();
 
   const handleLogout = async () => {
     try {
@@ -32,7 +35,9 @@ export function Navbar() {
       {/* Left Side */}
       <div className="flex items-center gap-3">
         <Menu className="h-5 w-5 md:hidden" />
-        <h1 className="text-lg font-semibold">Dashboard</h1>
+        <h1 className="text-lg font-semibold">
+          {toTitleCase(segment as string)}
+        </h1>
       </div>
 
       {/* Right Side */}
