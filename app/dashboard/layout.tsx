@@ -1,3 +1,4 @@
+import { RbacGuard } from "@/components/auth/rbac-guard";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Navbar } from "@/components/layout/navbar";
 
@@ -7,13 +8,18 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen w-full">
+    <div className="relative flex h-screen w-full overflow-hidden">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(212,175,86,0.15),transparent_26%),radial-gradient(circle_at_100%_8%,rgba(35,63,133,0.14),transparent_24%)]" />
       <Sidebar />
 
-      <div className="flex flex-col flex-1">
+      <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
         <Navbar />
 
-        <main className="flex-1 p-6 bg-muted/30 w-full">{children}</main>
+        <main className="w-full min-h-0 flex-1 overflow-hidden p-4 md:p-6 xl:p-8">
+          <div className="mx-auto flex h-full min-h-0 w-full max-w-7xl flex-col">
+            <RbacGuard>{children}</RbacGuard>
+          </div>
+        </main>
       </div>
     </div>
   );

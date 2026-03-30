@@ -1,21 +1,47 @@
 import { api } from "@/lib/api";
+import { clearAuthSession, persistAuthSession } from "@/lib/auth-session";
+import { StandardResponse } from "@/type/shared";
 
 interface LoginDto {
   email: string;
   password: string;
 }
 
-interface LoginResponse {
-  success: boolean;
-  message: string;
-  data: unknown;
-  timestamp: string;
+interface RegisterDto extends LoginDto {
+  role: string;
 }
 
+type AuthPayload = {
+  access_token?: string;
+  token?: string;
+  user?: {
+    email: string;
+    role: string;
+  };
+};
+
+type AuthResponse = StandardResponse<AuthPayload>;
+
+export const register = async (data: RegisterDto) => {
+  return api.post<AuthResponse, RegisterDto>("/auth/register", data);
+};
+
 export const login = async (data: LoginDto) => {
-  return api.post<LoginResponse, LoginDto>("auth/login", data);
+  const response = await api.post<AuthResponse, LoginDto>("/auth/login", data);
+
+  const token = response.data?.access_token ?? response.data?.token;
+  persistAuthSession({
+    token,
+    user: response.data?.user,
+  });
+
+  return response;
 };
 
 export const logout = async () => {
-  return api.post<LoginResponse>("auth/logout");
+  const response = await api.post<AuthResponse>("/auth/logout");
+
+  clearAuthSession();
+
+  return response;
 };

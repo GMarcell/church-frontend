@@ -49,56 +49,47 @@
 :root {
   --radius: 0.75rem;
 
-  /* Base */
-  --background: oklch(0.98 0.01 250);
-  --foreground: oklch(0.22 0.02 250);
+  --background: oklch(0.985 0.01 84);
+  --foreground: oklch(0.24 0.03 252);
 
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.22 0.02 250);
+  --card: oklch(0.995 0.006 84);
+  --card-foreground: oklch(0.24 0.03 252);
 
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.22 0.02 250);
+  --popover: oklch(0.995 0.006 84);
+  --popover-foreground: oklch(0.24 0.03 252);
 
-  /* Primary – Royal Church Blue */
-  --primary: oklch(0.45 0.12 260);
-  --primary-foreground: oklch(0.98 0.01 250);
+  --primary: oklch(0.43 0.13 243);
+  --primary-foreground: oklch(0.985 0.01 84);
 
-  /* Secondary – Soft Neutral */
-  --secondary: oklch(0.94 0.01 250);
-  --secondary-foreground: oklch(0.3 0.02 250);
+  --secondary: oklch(0.94 0.015 78);
+  --secondary-foreground: oklch(0.3 0.03 252);
 
-  /* Accent – Elegant Gold */
-  --accent: oklch(0.75 0.12 85);
-  --accent-foreground: oklch(0.25 0.03 85);
+  --accent: oklch(0.79 0.13 74);
+  --accent-foreground: oklch(0.28 0.035 70);
 
-  /* Muted */
-  --muted: oklch(0.95 0.01 250);
-  --muted-foreground: oklch(0.5 0.02 250);
+  --muted: oklch(0.95 0.01 80);
+  --muted-foreground: oklch(0.52 0.02 252);
 
-  /* Destructive */
   --destructive: oklch(0.62 0.2 25);
 
-  /* Borders */
-  --border: oklch(0.9 0.01 250);
-  --input: oklch(0.9 0.01 250);
-  --ring: oklch(0.55 0.12 260);
+  --border: oklch(0.89 0.014 80);
+  --input: oklch(0.9 0.014 80);
+  --ring: oklch(0.56 0.12 243);
 
-  /* Charts (dashboard friendly) */
-  --chart-1: oklch(0.55 0.14 260);
-  --chart-2: oklch(0.65 0.1 200);
-  --chart-3: oklch(0.7 0.14 85);
-  --chart-4: oklch(0.6 0.18 140);
-  --chart-5: oklch(0.65 0.2 20);
+  --chart-1: oklch(0.53 0.13 243);
+  --chart-2: oklch(0.63 0.09 198);
+  --chart-3: oklch(0.75 0.14 74);
+  --chart-4: oklch(0.64 0.14 146);
+  --chart-5: oklch(0.68 0.18 28);
 
-  /* Sidebar */
-  --sidebar: oklch(0.96 0.01 250);
-  --sidebar-foreground: oklch(0.22 0.02 250);
-  --sidebar-primary: oklch(0.45 0.12 260);
-  --sidebar-primary-foreground: oklch(0.98 0.01 250);
-  --sidebar-accent: oklch(0.75 0.12 85);
-  --sidebar-accent-foreground: oklch(0.25 0.03 85);
-  --sidebar-border: oklch(0.88 0.01 250);
-  --sidebar-ring: oklch(0.55 0.12 260);
+  --sidebar: oklch(0.24 0.04 247);
+  --sidebar-foreground: oklch(0.97 0.008 84);
+  --sidebar-primary: oklch(0.8 0.13 74);
+  --sidebar-primary-foreground: oklch(0.22 0.03 252);
+  --sidebar-accent: oklch(0.34 0.04 243);
+  --sidebar-accent-foreground: oklch(0.98 0.008 84);
+  --sidebar-border: oklch(0.33 0.025 247);
+  --sidebar-ring: oklch(0.8 0.13 74);
 }
 
 .dark {
@@ -145,5 +136,10 @@
   }
   body {
     @apply bg-background text-foreground;
+    background-image:
+      radial-gradient(circle at top left, color-mix(in oklab, var(--accent) 22%, transparent) 0%, transparent 32%),
+      radial-gradient(circle at top right, color-mix(in oklab, var(--primary) 18%, transparent) 0%, transparent 28%),
+      linear-gradient(180deg, color-mix(in oklab, var(--background) 90%, white) 0%, var(--background) 100%);
+    background-attachment: fixed;
   }
 }

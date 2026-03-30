@@ -6,6 +6,12 @@ export type BranchCount = {
   totalRegions: number;
 };
 
+export type CreateBranchDto = {
+  name: string;
+};
+
+export type UpdateBranchDto = Partial<CreateBranchDto>;
+
 export type Branch = {
   id: string;
   name: string;
