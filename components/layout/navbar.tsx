@@ -15,7 +15,11 @@ import { useStoredUser } from "@/lib/auth-session";
 import { logout } from "@/services/auth";
 import { toTitleCase } from "@/lib/helper";
 
-export function Navbar() {
+interface NavbarProps {
+  onMenuClick?: () => void;
+}
+
+export function Navbar({ onMenuClick }: NavbarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const segment = pathname.split("/").filter(Boolean).pop();
@@ -34,27 +38,34 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-20 border-b border-white/60 bg-background/72 backdrop-blur-xl">
-      <div className="mx-auto flex h-20 w-full max-w-7xl items-center justify-between gap-4 px-4 md:px-6 xl:px-8">
-        <div className="flex items-center gap-4">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-border/80 bg-white/75 shadow-sm md:hidden">
+      <div className="mx-auto flex min-h-20 w-full max-w-7xl flex-wrap items-center justify-between gap-3 px-3 py-3 sm:px-4 md:flex-nowrap md:gap-4 md:px-6 xl:px-8">
+        <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={onMenuClick}
+            className="flex h-11 w-11 shrink-0 rounded-2xl border border-border/80 bg-white/75 shadow-sm md:hidden"
+            aria-label="Open navigation menu"
+          >
             <Menu className="h-5 w-5" />
-          </div>
+          </Button>
 
-          <div>
+          <div className="min-w-0">
             <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">
               Administration
             </p>
-            <h1 className="text-xl font-semibold tracking-tight">
+            <h1 className="truncate text-lg font-semibold tracking-tight sm:text-xl">
               {toTitleCase(segment as string)}
             </h1>
           </div>
         </div>
 
-        <div className="hidden rounded-full border border-border/70 bg-white/70 px-4 py-2 text-sm text-muted-foreground shadow-sm backdrop-blur md:flex">
+        <div className="hidden rounded-full border border-border/70 bg-white/70 px-4 py-2 text-sm text-muted-foreground shadow-sm backdrop-blur lg:flex">
           Ministry records, people, and branch operations
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex w-full items-center justify-end gap-3 sm:gap-4 md:w-auto">
           <div className="hidden text-right md:block">
             <p className="text-sm font-medium">{currentUser?.role ?? "User"}</p>
             <p className="text-xs text-muted-foreground">

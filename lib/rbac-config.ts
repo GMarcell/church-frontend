@@ -11,6 +11,8 @@ import {
 const ROLE_ACCESS_STORAGE_KEY = "role_access_config";
 const ROLE_ACCESS_COOKIE_KEY = "role_access_config";
 const ROLE_ACCESS_EVENT = "role-access-config-updated";
+let cachedRoleAccessRaw: string | null | undefined;
+let cachedRoleAccessMap: RoleAccessMap = defaultRoleAccessMap;
 
 const setCookie = (name: string, value: string, maxAge = 60 * 60 * 24 * 30) => {
   if (typeof document === "undefined") return;
@@ -23,7 +25,13 @@ export const getStoredRoleAccessMap = (): RoleAccessMap => {
   }
 
   const rawConfig = localStorage.getItem(ROLE_ACCESS_STORAGE_KEY);
-  return parseRoleAccessMap(rawConfig);
+  if (rawConfig === cachedRoleAccessRaw) {
+    return cachedRoleAccessMap;
+  }
+
+  cachedRoleAccessRaw = rawConfig;
+  cachedRoleAccessMap = parseRoleAccessMap(rawConfig);
+  return cachedRoleAccessMap;
 };
 
 export const persistRoleAccessMap = (config: RoleAccessMap) => {

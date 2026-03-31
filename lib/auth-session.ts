@@ -6,6 +6,8 @@ import { SessionUser } from "./rbac";
 const ACCESS_TOKEN_KEY = "access_token";
 const AUTH_USER_KEY = "auth_user";
 const AUTH_SESSION_EVENT = "auth-session-updated";
+let cachedUserRaw: string | null | undefined;
+let cachedUser: SessionUser | null = null;
 
 const setCookie = (name: string, value: string, maxAge = 60 * 60 * 24 * 7) => {
   if (typeof document === "undefined") return;
@@ -61,11 +63,21 @@ export const getStoredUser = (): SessionUser | null => {
   if (typeof window === "undefined") return null;
 
   const rawUser = localStorage.getItem(AUTH_USER_KEY);
-  if (!rawUser) return null;
+  if (rawUser === cachedUserRaw) {
+    return cachedUser;
+  }
+
+  cachedUserRaw = rawUser;
+  if (!rawUser) {
+    cachedUser = null;
+    return null;
+  }
 
   try {
-    return JSON.parse(rawUser) as SessionUser;
+    cachedUser = JSON.parse(rawUser) as SessionUser;
+    return cachedUser;
   } catch {
+    cachedUser = null;
     return null;
   }
 };

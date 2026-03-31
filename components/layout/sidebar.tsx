@@ -9,9 +9,24 @@ import { hasRequiredRole } from "@/lib/rbac";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { menuItems } from "@/nav/const";
 
-export function Sidebar() {
+interface SidebarProps {
+  mobileOpen?: boolean;
+  onMobileOpenChange?: (open: boolean) => void;
+}
+
+export function Sidebar({
+  mobileOpen = false,
+  onMobileOpenChange,
+}: SidebarProps) {
   const pathname = usePathname();
   const currentUser = useStoredUser();
   const roleAccessMap = useStoredRoleAccessMap();
@@ -24,12 +39,11 @@ export function Sidebar() {
     [currentUser?.role, roleAccessMap],
   );
 
-  return (
-    <aside className="hidden h-screen w-72 shrink-0 border-r border-sidebar-border/60 bg-sidebar text-sidebar-foreground md:flex md:flex-col">
-      <div className="relative flex h-full flex-col overflow-hidden px-5 py-6">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,211,117,0.15),transparent_30%),linear-gradient(180deg,transparent,rgba(255,255,255,0.02))]" />
+  const sidebarBody = (
+    <div className="relative flex h-full flex-col overflow-hidden px-4 py-5 sm:px-5 sm:py-6">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,211,117,0.15),transparent_30%),linear-gradient(180deg,transparent,rgba(255,255,255,0.02))]" />
 
-        <div className="relative mb-8 space-y-4">
+        <div className="relative mb-6 space-y-4 sm:mb-8">
           <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-sidebar-primary text-sidebar-primary-foreground shadow-[0_18px_38px_-18px_rgba(233,194,96,0.72)]">
             CS
           </div>
@@ -41,7 +55,7 @@ export function Sidebar() {
           </div>
         </div>
 
-        <div className="relative mb-6 rounded-[1.4rem] border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
+        <div className="relative mb-5 rounded-[1.4rem] border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
           <p className="text-xs uppercase tracking-[0.24em] text-sidebar-foreground/45">
             Signed In
           </p>
@@ -55,13 +69,17 @@ export function Sidebar() {
 
         <Separator className="mb-5 bg-white/10" />
 
-        <nav className="relative flex flex-1 flex-col gap-2">
+        <nav className="relative flex flex-1 flex-col gap-2 overflow-y-auto pr-1">
           {filteredMenuItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
 
             return (
-              <Link key={item.href} href={item.href}>
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => onMobileOpenChange?.(false)}
+              >
                 <Button
                   variant={isActive ? "secondary" : "ghost"}
                   className={cn(
@@ -105,6 +123,28 @@ export function Sidebar() {
           </p>
         </div>
       </div>
-    </aside>
+  );
+
+  return (
+    <>
+      <Sheet open={mobileOpen} onOpenChange={onMobileOpenChange}>
+        <SheetContent
+          side="left"
+          className="w-[min(88vw,22rem)] border-white/10 bg-sidebar p-0 text-sidebar-foreground md:hidden [&>button]:text-white"
+        >
+          <SheetHeader className="sr-only">
+            <SheetTitle>Navigation Menu</SheetTitle>
+            <SheetDescription>
+              Access dashboard navigation on smaller screens.
+            </SheetDescription>
+          </SheetHeader>
+          {sidebarBody}
+        </SheetContent>
+      </Sheet>
+
+      <aside className="hidden h-screen w-72 shrink-0 border-r border-sidebar-border/60 bg-sidebar text-sidebar-foreground md:flex md:flex-col">
+        {sidebarBody}
+      </aside>
+    </>
   );
 }
