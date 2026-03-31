@@ -32,3 +32,8 @@ export type CountMember = {
   male: number;
   female: number;
 };
+
+export type PelkatMemberCount = {
+  pelkat: string;
+  total: number;
+};

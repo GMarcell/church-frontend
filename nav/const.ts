@@ -43,6 +43,12 @@ export const menuItems = [
     roles: ["ADMIN", "STAFF", "MEMBER"] satisfies AppRole[],
   },
   {
+    title: "Pelkat Members",
+    href: "/dashboard/pelkat-members",
+    icon: Users,
+    roles: ["ADMIN", "STAFF"] satisfies AppRole[],
+  },
+  {
     title: "Attendance",
     href: "/dashboard/attendance",
     icon: CalendarCheck,
