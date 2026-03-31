@@ -6,10 +6,13 @@ import {
   EntityManager,
   FormValues,
 } from "@/components/dashboard/entity-manager";
+import { Badge } from "@/components/ui/badge";
 import { getErrorMessage } from "@/lib/helper";
+import { cn } from "@/lib/utils";
 import MemberSelfService from "./self-service";
 import { useFamilies } from "@/services/family";
 import {
+  getPelkatLabel,
   useCreateMember,
   useDeleteMember,
   useMembers,
@@ -36,10 +39,30 @@ const formatMemberRole = (role: string) =>
 
 const memberRoleOptions = [
   { label: "Family Head", value: "FAMILY_HEAD" },
-  { label: "Spouse", value: "SPOUSE" },
+  { label: "Wife", value: "WIFE" },
   { label: "Child", value: "CHILD" },
   { label: "Other", value: "OTHER" },
 ];
+
+const pelkatBadgeClasses: Record<string, string> = {
+  "Pelayanan Anak":
+    "border-emerald-200 bg-emerald-50 text-emerald-700",
+  "Persekutuan Taruna":
+    "border-amber-200 bg-amber-50 text-amber-700",
+  "Gerakan Pemuda":
+    "border-blue-200 bg-blue-50 text-blue-700",
+  "Persekutuan Kaum Perempuan":
+    "border-purple-200 bg-purple-50 text-purple-700",
+  "Persekutuan kaum Bapak":
+    "border-slate-200 bg-slate-100 text-slate-700",
+  "Persekutuan kaum Lanjut Usia":
+    "border-orange-200 bg-orange-50 text-orange-700",
+};
+
+const statusBadgeClasses: Record<"Active" | "Inactive", string> = {
+  Active: "border-emerald-200 bg-emerald-50 text-emerald-700",
+  Inactive: "border-red-200 bg-red-50 text-red-700",
+};
 
 export default function MembersPage() {
   const currentUser = useStoredUser();
@@ -147,6 +170,32 @@ export default function MembersPage() {
           render: (item) => item.family?.familyName ?? item.familyId,
         },
         {
+          key: "pelkat",
+          label: "Pelkat",
+          render: (item) => {
+            const pelkatValue = item.pelkat ?? item.memberPelkat ?? "";
+
+            if (!pelkatValue) {
+              return "-";
+            }
+
+            const label = getPelkatLabel(pelkatValue);
+
+            return (
+              <Badge
+                variant="outline"
+                className={cn(
+                  "py-1",
+                  pelkatBadgeClasses[label] ??
+                    "border-border/70 bg-muted/60 text-muted-foreground",
+                )}
+              >
+                {label}
+              </Badge>
+            );
+          },
+        },
+        {
           key: "role",
           label: "Role",
           render: (item) => formatMemberRole(item.role),
@@ -154,7 +203,21 @@ export default function MembersPage() {
         {
           key: "status",
           label: "Status",
-          render: (item) => (item.isActive ? "Active" : "Inactive"),
+          render: (item) => {
+            const status = item.isActive ? "Active" : "Inactive";
+
+            return (
+              <Badge
+                variant="outline"
+                className={cn(
+                  "py-1",
+                  statusBadgeClasses[status],
+                )}
+              >
+                {status}
+              </Badge>
+            );
+          },
         },
       ]}
       getItemId={(item) => item.id}
@@ -162,7 +225,8 @@ export default function MembersPage() {
         item.name.toLowerCase().includes(query) ||
         item.email.toLowerCase().includes(query) ||
         item.phone.toLowerCase().includes(query) ||
-        (item.family?.familyName ?? "").toLowerCase().includes(query)
+        (item.family?.familyName ?? "").toLowerCase().includes(query) ||
+        (item.pelkat ?? item.memberPelkat ?? "").toLowerCase().includes(query)
       }
       getEditValues={(item) => ({
         name: item.name,

@@ -21,6 +21,8 @@ export type Member = {
   phone: string;
   email: string;
   role: string;
+  pelkat?: string;
+  memberPelkat?: string;
   isActive: boolean;
   familyId: string;
   createdAt: string;

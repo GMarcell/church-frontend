@@ -29,6 +29,16 @@ export const memberKeys = {
   detail: (id: string) => ["members", id] as const,
 };
 
+const pelkatLabelMap: Record<string, string> = {
+  "Gerakan Anak": "Pelayanan Anak",
+  Remaja: "Persekutuan Taruna",
+  "Persekutuan Wanita": "Persekutuan Kaum Perempuan",
+  "Persekutuan Kaum Bapa": "Persekutuan kaum Bapak",
+  Lansia: "Persekutuan kaum Lanjut Usia",
+};
+
+export const getPelkatLabel = (pelkat: string) => pelkatLabelMap[pelkat] ?? pelkat;
+
 const normalizePelkatCountEntry = (entry: unknown): PelkatMemberCount | null => {
   if (!entry || typeof entry !== "object") {
     return null;
@@ -60,7 +70,7 @@ const normalizePelkatCountEntry = (entry: unknown): PelkatMemberCount | null => 
   }
 
   return {
-    pelkat,
+    pelkat: getPelkatLabel(pelkat),
     total: totalCandidate,
   };
 };
@@ -146,7 +156,7 @@ export const getPelkatCount = async (pelkat: string): Promise<PelkatMemberCount>
 
   if (typeof res.data === "number") {
     return {
-      pelkat,
+      pelkat: getPelkatLabel(pelkat),
       total: res.data,
     };
   }
@@ -158,7 +168,7 @@ export const getPelkatCount = async (pelkat: string): Promise<PelkatMemberCount>
     typeof res.data.total === "number"
   ) {
     return {
-      pelkat,
+      pelkat: getPelkatLabel(pelkat),
       total: res.data.total,
     };
   }

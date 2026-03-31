@@ -16,6 +16,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Table,
   TableBody,
   TableCell,
@@ -222,22 +229,21 @@ export function EntityManager<TItem>({
                         <Label htmlFor={`create-${field.name}`}>{field.label}</Label>
 
                         {field.type === "select" ? (
-                          <select
-                            id={`create-${field.name}`}
-                            className="flex h-11 w-full rounded-2xl border border-border/70 bg-white/80 px-4 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow]"
-                            value={String(values[field.name] ?? "")}
-                            onChange={(event) =>
-                              handleChange(field, event.target.value)
-                            }
-                            required={field.required}
+                          <Select
+                            value={String(values[field.name] ?? "") || undefined}
+                            onValueChange={(value) => handleChange(field, value)}
                           >
-                            <option value="">Select {field.label}</option>
-                            {field.options?.map((option) => (
-                              <option key={option.value} value={option.value}>
-                                {option.label}
-                              </option>
-                            ))}
-                          </select>
+                            <SelectTrigger id={`create-${field.name}`}>
+                              <SelectValue placeholder={`Select ${field.label}`} />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {field.options?.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         ) : field.type === "checkbox" ? (
                           <label className="flex h-11 items-center gap-2 rounded-2xl border border-border/70 bg-white/80 px-4 text-sm">
                             <input
@@ -386,25 +392,28 @@ export function EntityManager<TItem>({
                                           </Label>
 
                                           {field.type === "select" ? (
-                                            <select
-                                              id={`edit-${id}-${field.name}`}
-                                              className="flex h-11 w-full rounded-2xl border border-border/70 bg-white/80 px-4 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow]"
-                                              value={String(values[field.name] ?? "")}
-                                              onChange={(event) =>
-                                                handleChange(field, event.target.value)
+                                            <Select
+                                              value={String(values[field.name] ?? "") || undefined}
+                                              onValueChange={(value) =>
+                                                handleChange(field, value)
                                               }
-                                              required={field.required}
                                             >
-                                              <option value="">Select {field.label}</option>
-                                              {field.options?.map((option) => (
-                                                <option
-                                                  key={option.value}
-                                                  value={option.value}
-                                                >
-                                                  {option.label}
-                                                </option>
-                                              ))}
-                                            </select>
+                                              <SelectTrigger id={`edit-${id}-${field.name}`}>
+                                                <SelectValue
+                                                  placeholder={`Select ${field.label}`}
+                                                />
+                                              </SelectTrigger>
+                                              <SelectContent>
+                                                {field.options?.map((option) => (
+                                                  <SelectItem
+                                                    key={option.value}
+                                                    value={option.value}
+                                                  >
+                                                    {option.label}
+                                                  </SelectItem>
+                                                ))}
+                                              </SelectContent>
+                                            </Select>
                                           ) : field.type === "checkbox" ? (
                                             <label className="flex h-11 items-center gap-2 rounded-2xl border border-border/70 bg-white/80 px-4 text-sm">
                                               <input
@@ -501,20 +510,24 @@ export function EntityManager<TItem>({
                   <Label htmlFor={`${title}-page-size`} className="text-sm">
                     Rows
                   </Label>
-                  <select
-                    id={`${title}-page-size`}
-                    className="flex h-10 rounded-full border border-border/70 bg-white/80 px-4 text-sm shadow-xs outline-none"
-                    value={pagination.limit}
-                    onChange={(event) =>
-                      onPageSizeChange?.(Number(event.target.value))
-                    }
+                  <Select
+                    value={String(pagination.limit)}
+                    onValueChange={(value) => onPageSizeChange?.(Number(value))}
                   >
-                    {[10, 20, 50].map((size) => (
-                      <option key={size} value={size}>
-                        {size}
-                      </option>
-                    ))}
-                  </select>
+                    <SelectTrigger
+                      id={`${title}-page-size`}
+                      className="h-10 w-[88px] rounded-full bg-white/80"
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[10, 20, 50].map((size) => (
+                        <SelectItem key={size} value={String(size)}>
+                          {size}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">

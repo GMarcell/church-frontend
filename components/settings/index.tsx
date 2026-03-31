@@ -62,12 +62,18 @@ export default function SettingsPage() {
       <Card className="overflow-hidden border-white/70">
         <CardHeader className="border-b border-border/60 bg-[linear-gradient(135deg,rgba(34,71,146,0.08),rgba(204,169,88,0.08))]">
           <CardTitle className="text-2xl tracking-tight">
-            Role Access Settings
+            Page Access by Role
           </CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Control which roles can open each dashboard menu. Settings stays
-            admin-only to avoid locking everyone out.
-          </p>
+          <div className="space-y-2 text-sm text-muted-foreground">
+            <p>
+              Use this page to decide which roles can open each dashboard page.
+            </p>
+            <p>
+              Each row is one page. A checked box means that role can view it.
+              An unchecked box means the page is hidden and blocked for that role.
+            </p>
+            <p>Settings stays Admin-only so access cannot be removed by mistake.</p>
+          </div>
         </CardHeader>
 
         <CardContent className="space-y-4 pt-6">
@@ -77,47 +83,67 @@ export default function SettingsPage() {
             </div>
           ) : null}
 
-          <div className="overflow-hidden rounded-[1.5rem] border border-border/70 bg-white/65 shadow-[0_18px_40px_-30px_rgba(23,32,62,0.32)] backdrop-blur-sm">
-            <div className="grid grid-cols-[minmax(0,1.6fr)_repeat(2,minmax(120px,1fr))] gap-px bg-border/60">
-              <div className="bg-[linear-gradient(180deg,rgba(247,244,235,0.95),rgba(255,255,255,0.8))] px-5 py-4 text-xs uppercase tracking-[0.18em] text-muted-foreground">
-                Menu
-              </div>
-              {APP_ROLES.map((role) => (
-                <div
-                  key={role}
-                  className="bg-[linear-gradient(180deg,rgba(247,244,235,0.95),rgba(255,255,255,0.8))] px-5 py-4 text-center text-xs uppercase tracking-[0.18em] text-muted-foreground"
-                >
-                  {role}
-                </div>
-              ))}
+          <div className="rounded-[1.5rem] border border-border/70 bg-white/65 p-4 shadow-[0_18px_40px_-30px_rgba(23,32,62,0.32)] backdrop-blur-sm sm:p-5">
+            <div className="mb-4 rounded-2xl border border-amber-200/70 bg-amber-50/80 px-4 py-3 text-sm text-amber-900">
+              Check the roles that should be allowed to open each page.
+            </div>
 
-              {configurableMenuItems.map((item) => (
-                <>
-                  <div
-                    key={`${item.href}-label`}
-                    className="bg-white/85 px-5 py-4 text-sm font-medium"
-                  >
-                    {item.title}
-                  </div>
-                  {APP_ROLES.map((role) => {
-                    const enabled = (config[item.href] ?? []).includes(role);
-
-                    return (
-                      <label
-                        key={`${item.href}-${role}`}
-                        className="flex cursor-pointer items-center justify-center bg-white/85 px-5 py-4"
+            <div className="overflow-x-auto rounded-[1.25rem] border border-border/70">
+              <table className="min-w-full border-collapse">
+                <thead>
+                  <tr className="bg-[linear-gradient(180deg,rgba(247,244,235,0.95),rgba(255,255,255,0.8))]">
+                    <th className="px-5 py-4 text-left text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                      Dashboard Page
+                    </th>
+                    {APP_ROLES.map((role) => (
+                      <th
+                        key={role}
+                        className="px-5 py-4 text-center text-xs uppercase tracking-[0.18em] text-muted-foreground"
                       >
-                        <input
-                          type="checkbox"
-                          checked={enabled}
-                          onChange={() => toggleRole(item.href, role)}
-                          className="h-4 w-4 rounded border-border"
-                        />
-                      </label>
-                    );
-                  })}
-                </>
-              ))}
+                        {role}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {configurableMenuItems.map((item) => (
+                    <tr key={item.href} className="border-t border-border/60 bg-white/85">
+                      <td className="px-5 py-4 align-middle">
+                        <div className="text-sm font-medium text-foreground">
+                          {item.title}
+                        </div>
+                        <div className="mt-1 text-xs text-muted-foreground">
+                          {item.href}
+                        </div>
+                      </td>
+
+                      {APP_ROLES.map((role) => {
+                        const enabled = (config[item.href] ?? []).includes(role);
+
+                        return (
+                          <td
+                            key={`${item.href}-${role}`}
+                            className="px-5 py-4 text-center align-middle"
+                          >
+                            <label className="inline-flex cursor-pointer items-center justify-center">
+                              <span className="sr-only">
+                                Allow {role} to access {item.title}
+                              </span>
+                              <input
+                                type="checkbox"
+                                checked={enabled}
+                                onChange={() => toggleRole(item.href, role)}
+                                className="h-4 w-4 rounded border-border"
+                              />
+                            </label>
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
 

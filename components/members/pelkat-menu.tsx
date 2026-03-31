@@ -12,6 +12,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Table,
   TableBody,
   TableCell,
@@ -19,11 +26,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useMembersByPelkat, usePelkatCount } from "@/services/member";
+import { getPelkatLabel, useMembersByPelkat, usePelkatCount } from "@/services/member";
 import { toTitleCase } from "@/lib/helper";
 
 const pelkatOptions = [
-  "Gerakan Anak",
+  "Pelayanan Anak",
   "Remaja",
   "Gerakan Pemuda",
   "Persekutuan Kaum Bapa",
@@ -48,16 +55,17 @@ export default function PelkatMenu() {
   const pagination = data?.meta;
   const canGoPrevious = (pagination?.page ?? 1) > 1;
   const canGoNext = pagination ? pagination.page < pagination.totalPages : false;
+  const activePelkatLabel = getPelkatLabel(activePelkat);
 
   const summary = useMemo(() => {
     if (!activePelkat) {
       return "Choose a pelkat to load members.";
     }
     if (isLoading || isFetching) {
-      return `Loading members for ${activePelkat}...`;
+      return `Loading members for ${activePelkatLabel}...`;
     }
-    return `${pelkatCount?.total ?? pagination?.total ?? members.length} members found for ${activePelkat}.`;
-  }, [activePelkat, isFetching, isLoading, members.length, pagination?.total, pelkatCount?.total]);
+    return `${pelkatCount?.total ?? pagination?.total ?? members.length} members found for ${activePelkatLabel}.`;
+  }, [activePelkat, activePelkatLabel, isFetching, isLoading, members.length, pagination?.total, pelkatCount?.total]);
 
   const handlePelkatSelect = (value: string) => {
     setSelectedPelkat(value);
@@ -86,18 +94,18 @@ export default function PelkatMenu() {
         <CardContent className="grid gap-4 px-4 pb-5 sm:px-6 lg:grid-cols-[minmax(0,240px)_minmax(0,1fr)_auto] lg:items-end">
           <div className="space-y-2">
             <Label htmlFor="pelkat-menu">Pelkat Menu</Label>
-            <select
-              id="pelkat-menu"
-              className="flex h-11 w-full rounded-2xl border border-border/70 bg-white/80 px-4 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow]"
-              value={selectedPelkat}
-              onChange={(event) => handlePelkatSelect(event.target.value)}
-            >
-              {pelkatOptions.map((pelkat) => (
-                <option key={pelkat} value={pelkat}>
-                  {pelkat}
-                </option>
-              ))}
-            </select>
+            <Select value={selectedPelkat} onValueChange={handlePelkatSelect}>
+              <SelectTrigger id="pelkat-menu">
+                <SelectValue placeholder="Choose pelkat" />
+              </SelectTrigger>
+              <SelectContent>
+                {pelkatOptions.map((pelkat) => (
+                  <SelectItem key={pelkat} value={pelkat}>
+                    {pelkat}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
@@ -122,7 +130,7 @@ export default function PelkatMenu() {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <CardTitle className="text-lg tracking-tight sm:text-xl">
-                {activePelkat ? activePelkat : "No pelkat selected"}
+                {activePelkat ? activePelkatLabel : "No pelkat selected"}
               </CardTitle>
               <CardDescription>{summary}</CardDescription>
             </div>
@@ -214,21 +222,27 @@ export default function PelkatMenu() {
                 <Label htmlFor="pelkat-page-size" className="text-sm">
                   Rows
                 </Label>
-                <select
-                  id="pelkat-page-size"
-                  className="flex h-10 rounded-full border border-border/70 bg-white/80 px-4 text-sm shadow-xs outline-none"
-                  value={limit}
-                  onChange={(event) => {
-                    setLimit(Number(event.target.value));
+                <Select
+                  value={String(limit)}
+                  onValueChange={(value) => {
+                    setLimit(Number(value));
                     setPage(1);
                   }}
                 >
-                  {[10, 20, 50].map((size) => (
-                    <option key={size} value={size}>
-                      {size}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger
+                    id="pelkat-page-size"
+                    className="h-10 w-[88px] rounded-full bg-white/80"
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[10, 20, 50].map((size) => (
+                      <SelectItem key={size} value={String(size)}>
+                        {size}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">

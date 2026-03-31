@@ -15,6 +15,13 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { getErrorMessage } from "@/lib/helper";
 import { useStoredUser } from "@/lib/auth-session";
 import { useMember, useMembers, useUpdateMember } from "@/services/member";
@@ -217,20 +224,23 @@ export default function MemberSelfService() {
 
                   <div className="space-y-2">
                     <Label htmlFor="self-gender">Gender</Label>
-                    <select
-                      id="self-gender"
-                      className="flex h-11 w-full rounded-2xl border border-border/70 bg-white/80 px-4 py-2 text-sm shadow-xs outline-none"
+                    <Select
                       value={formValues.gender}
-                      onChange={(event) =>
+                      onValueChange={(value) =>
                         setFormValues((current) => ({
                           ...current,
-                          gender: event.target.value,
+                          gender: value,
                         }))
                       }
                     >
-                      <option value="MALE">Male</option>
-                      <option value="FEMALE">Female</option>
-                    </select>
+                      <SelectTrigger id="self-gender">
+                        <SelectValue placeholder="Select gender" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="MALE">Male</SelectItem>
+                        <SelectItem value="FEMALE">Female</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <div className="space-y-2">
