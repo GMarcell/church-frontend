@@ -6,3 +6,12 @@ export const loginSchema = z.object({
 });
 
 export type LoginFormValues = z.infer<typeof loginSchema>;
+
+export const memberLoginSchema = z.object({
+  name: z.string().min(2, "Name is required"),
+  password: z
+    .string()
+    .regex(/^\d{2}-\d{2}-\d{4}$/, "Use DD-MM-YYYY format"),
+});
+
+export type MemberLoginFormValues = z.infer<typeof memberLoginSchema>;

@@ -1,5 +1,6 @@
 "use client";
 
+import { useSyncExternalStore } from "react";
 import {
   defaultRoleAccessMap,
   parseRoleAccessMap,
@@ -39,3 +40,24 @@ export const resetStoredRoleAccessMap = () => {
 };
 
 export const roleAccessConfigEvent = ROLE_ACCESS_EVENT;
+
+const subscribeToRoleAccessConfig = (callback: () => void) => {
+  if (typeof window === "undefined") {
+    return () => undefined;
+  }
+
+  window.addEventListener(ROLE_ACCESS_EVENT, callback);
+  window.addEventListener("storage", callback);
+
+  return () => {
+    window.removeEventListener(ROLE_ACCESS_EVENT, callback);
+    window.removeEventListener("storage", callback);
+  };
+};
+
+export const useStoredRoleAccessMap = () =>
+  useSyncExternalStore(
+    subscribeToRoleAccessConfig,
+    getStoredRoleAccessMap,
+    () => defaultRoleAccessMap,
+  );

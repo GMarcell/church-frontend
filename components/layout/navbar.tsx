@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { Menu, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,16 +11,15 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { usePathname, useRouter } from "next/navigation";
-import { getStoredUser } from "@/lib/auth-session";
+import { useStoredUser } from "@/lib/auth-session";
 import { logout } from "@/services/auth";
 import { toTitleCase } from "@/lib/helper";
-import { SessionUser } from "@/lib/rbac";
 
 export function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
   const segment = pathname.split("/").filter(Boolean).pop();
-  const [currentUser] = useState<SessionUser | null>(() => getStoredUser());
+  const currentUser = useStoredUser();
 
   const handleLogout = async () => {
     try {
@@ -60,7 +58,7 @@ export function Navbar() {
           <div className="hidden text-right md:block">
             <p className="text-sm font-medium">{currentUser?.role ?? "User"}</p>
             <p className="text-xs text-muted-foreground">
-              {currentUser?.email ?? "No email"}
+              {currentUser?.email ?? currentUser?.name ?? "No profile"}
             </p>
           </div>
 
@@ -85,7 +83,7 @@ export function Navbar() {
               <div className="px-2 py-2 text-sm">
                 <p className="font-medium">{currentUser?.role ?? "User"}</p>
                 <p className="text-xs text-muted-foreground">
-                  {currentUser?.email ?? "No email"}
+                  {currentUser?.email ?? currentUser?.name ?? "No profile"}
                 </p>
               </div>
 

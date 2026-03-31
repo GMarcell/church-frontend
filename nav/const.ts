@@ -40,7 +40,7 @@ export const menuItems = [
     title: "Members",
     href: "/dashboard/members",
     icon: Users,
-    roles: ["ADMIN", "STAFF"] satisfies AppRole[],
+    roles: ["ADMIN", "STAFF", "MEMBER"] satisfies AppRole[],
   },
   {
     title: "Attendance",

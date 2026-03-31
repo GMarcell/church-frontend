@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
-import { getStoredUser } from "@/lib/auth-session";
-import { getStoredRoleAccessMap, roleAccessConfigEvent } from "@/lib/rbac-config";
+import { useMemo } from "react";
+import { useStoredUser } from "@/lib/auth-session";
+import { useStoredRoleAccessMap } from "@/lib/rbac-config";
 import { hasRequiredRole } from "@/lib/rbac";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -13,20 +13,8 @@ import { menuItems } from "@/nav/const";
 
 export function Sidebar() {
   const pathname = usePathname();
-  const [currentUser] = useState(() => getStoredUser());
-  const [roleAccessMap, setRoleAccessMap] = useState(() => getStoredRoleAccessMap());
-
-  useEffect(() => {
-    const syncConfig = () => setRoleAccessMap(getStoredRoleAccessMap());
-
-    window.addEventListener(roleAccessConfigEvent, syncConfig);
-    window.addEventListener("storage", syncConfig);
-
-    return () => {
-      window.removeEventListener(roleAccessConfigEvent, syncConfig);
-      window.removeEventListener("storage", syncConfig);
-    };
-  }, []);
+  const currentUser = useStoredUser();
+  const roleAccessMap = useStoredRoleAccessMap();
 
   const filteredMenuItems = useMemo(
     () =>
@@ -57,7 +45,9 @@ export function Sidebar() {
           <p className="text-xs uppercase tracking-[0.24em] text-sidebar-foreground/45">
             Signed In
           </p>
-          <p className="mt-2 text-sm font-medium">{currentUser?.email ?? "Guest"}</p>
+          <p className="mt-2 text-sm font-medium">
+            {currentUser?.email ?? currentUser?.name ?? "Guest"}
+          </p>
           <p className="mt-1 text-xs text-sidebar-foreground/60">
             {currentUser?.role ?? "Unknown role"}
           </p>

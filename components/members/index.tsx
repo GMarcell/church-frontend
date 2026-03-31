@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { useStoredUser } from "@/lib/auth-session";
 import {
   EntityManager,
   FormValues,
 } from "@/components/dashboard/entity-manager";
 import { getErrorMessage } from "@/lib/helper";
+import MemberSelfService from "./self-service";
 import { useFamilies } from "@/services/family";
 import {
   useCreateMember,
@@ -26,6 +28,12 @@ const toMemberPayload = (values: FormValues) => ({
   familyId: String(values.familyId),
 });
 
+const formatMemberRole = (role: string) =>
+  role
+    .toLowerCase()
+    .replaceAll("_", " ")
+    .replace(/^./, (letter) => letter.toUpperCase());
+
 const memberRoleOptions = [
   { label: "Family Head", value: "FAMILY_HEAD" },
   { label: "Spouse", value: "SPOUSE" },
@@ -34,6 +42,7 @@ const memberRoleOptions = [
 ];
 
 export default function MembersPage() {
+  const currentUser = useStoredUser();
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const { data: memberResult, isLoading } = useMembers({ page, limit });
@@ -42,6 +51,10 @@ export default function MembersPage() {
   const createMember = useCreateMember();
   const updateMember = useUpdateMember();
   const deleteMember = useDeleteMember();
+
+  if (currentUser?.role === "MEMBER") {
+    return <MemberSelfService />;
+  }
 
   return (
     <EntityManager<Member>
@@ -136,7 +149,7 @@ export default function MembersPage() {
         {
           key: "role",
           label: "Role",
-          render: (item) => item.role,
+          render: (item) => formatMemberRole(item.role),
         },
         {
           key: "status",

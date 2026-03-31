@@ -7,6 +7,11 @@ interface LoginDto {
   password: string;
 }
 
+interface MemberLoginDto {
+  name: string;
+  password: string;
+}
+
 interface RegisterDto extends LoginDto {
   role: string;
 }
@@ -15,12 +20,40 @@ type AuthPayload = {
   access_token?: string;
   token?: string;
   user?: {
-    email: string;
+    email?: string;
+    name?: string;
+    memberId?: string;
     role: string;
   };
 };
 
 type AuthResponse = StandardResponse<AuthPayload>;
+
+type TokenPayload = {
+  sub?: string;
+  id?: string;
+  memberId?: string;
+  role?: string;
+  email?: string;
+  name?: string;
+  fullName?: string;
+  preferred_username?: string;
+};
+
+const decodeTokenPayload = (token?: string): TokenPayload | null => {
+  if (!token) return null;
+
+  const payload = token.split(".")[1];
+  if (!payload) return null;
+
+  try {
+    const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const decoded = atob(normalized.padEnd(normalized.length + ((4 - (normalized.length % 4)) % 4), "="));
+    return JSON.parse(decoded) as TokenPayload;
+  } catch {
+    return null;
+  }
+};
 
 export const register = async (data: RegisterDto) => {
   return api.post<AuthResponse, RegisterDto>("/auth/register", data);
@@ -33,6 +66,32 @@ export const login = async (data: LoginDto) => {
   persistAuthSession({
     token,
     user: response.data?.user,
+  });
+
+  return response;
+};
+
+export const memberLogin = async (data: MemberLoginDto) => {
+  const response = await api.post<AuthResponse, MemberLoginDto>(
+    "/auth/member-login",
+    data,
+  );
+
+  const token = response.data?.access_token ?? response.data?.token;
+  const tokenPayload = decodeTokenPayload(token);
+
+  persistAuthSession({
+    token,
+    user: {
+      role: tokenPayload?.role ?? "MEMBER",
+      memberId: tokenPayload?.memberId ?? tokenPayload?.sub ?? tokenPayload?.id,
+      name:
+        tokenPayload?.name ??
+        tokenPayload?.fullName ??
+        tokenPayload?.preferred_username ??
+        data.name,
+      email: tokenPayload?.email,
+    },
   });
 
   return response;

@@ -1,9 +1,11 @@
-export const APP_ROLES = ["ADMIN", "STAFF"] as const;
+export const APP_ROLES = ["ADMIN", "STAFF", "MEMBER"] as const;
 
 export type AppRole = (typeof APP_ROLES)[number];
 
 export type SessionUser = {
-  email: string;
+  email?: string;
+  name?: string;
+  memberId?: string;
   role: string;
 };
 
@@ -19,7 +21,7 @@ export const defaultProtectedRoutes: ProtectedRoute[] = [
   { path: "/dashboard/branches", roles: ["ADMIN", "STAFF"] },
   { path: "/dashboard/regions", roles: ["ADMIN", "STAFF"] },
   { path: "/dashboard/families", roles: ["ADMIN", "STAFF"] },
-  { path: "/dashboard/members", roles: ["ADMIN", "STAFF"] },
+  { path: "/dashboard/members", roles: ["ADMIN", "STAFF", "MEMBER"] },
   { path: "/dashboard/attendance", roles: ["ADMIN", "STAFF"] },
   { path: "/dashboard/users", roles: ["ADMIN"] },
   { path: "/dashboard/settings", roles: ["ADMIN"] },
@@ -97,4 +99,12 @@ export const getProtectedRouteItems = (roleAccessMap?: RoleAccessMap) => {
     ...route,
     roles: resolved[route.path] ?? route.roles,
   }));
+};
+
+export const getDefaultDashboardPath = (role?: string | null) => {
+  if (role === "MEMBER") {
+    return "/dashboard/members";
+  }
+
+  return "/dashboard";
 };

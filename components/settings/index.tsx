@@ -3,21 +3,21 @@
 import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { APP_ROLES, defaultRoleAccessMap, RoleAccessMap } from "@/lib/rbac";
+import { APP_ROLES, RoleAccessMap } from "@/lib/rbac";
 import {
-  getStoredRoleAccessMap,
   persistRoleAccessMap,
   resetStoredRoleAccessMap,
+  useStoredRoleAccessMap,
 } from "@/lib/rbac-config";
 import { menuItems } from "@/nav/const";
 
 const lockedRoutes = new Set(["/dashboard/settings"]);
 
 export default function SettingsPage() {
-  const [config, setConfig] = useState<RoleAccessMap>(() =>
-    getStoredRoleAccessMap(),
-  );
+  const storedConfig = useStoredRoleAccessMap();
+  const [draftConfig, setDraftConfig] = useState<RoleAccessMap | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const config = draftConfig ?? storedConfig;
 
   const configurableMenuItems = useMemo(
     () =>
@@ -30,7 +30,8 @@ export default function SettingsPage() {
 
   const toggleRole = (path: string, role: string) => {
     setMessage(null);
-    setConfig((current) => {
+    setDraftConfig((currentDraft) => {
+      const current = currentDraft ?? storedConfig;
       const currentRoles = current[path] ?? [];
       const hasRole = currentRoles.includes(role);
       const nextRoles = hasRole
@@ -46,12 +47,13 @@ export default function SettingsPage() {
 
   const handleSave = () => {
     persistRoleAccessMap(config);
+    setDraftConfig(null);
     setMessage("Role access settings saved.");
   };
 
   const handleReset = () => {
     resetStoredRoleAccessMap();
-    setConfig(defaultRoleAccessMap);
+    setDraftConfig(null);
     setMessage("Role access reset to defaults.");
   };
 

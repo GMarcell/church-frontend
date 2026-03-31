@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import {
+  getDefaultDashboardPath,
   getAllowedRolesForPathFromConfig,
   hasRequiredRole,
   parseRoleAccessMap,
@@ -22,7 +23,9 @@ export function proxy(request: NextRequest) {
 
   // Logged in → trying to access login
   if (token && isAuthPage) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    return NextResponse.redirect(
+      new URL(getDefaultDashboardPath(userRole), request.url),
+    );
   }
 
   if (token && isDashboard && userRole) {
@@ -32,7 +35,9 @@ export function proxy(request: NextRequest) {
     );
 
     if (!hasRequiredRole(userRole, allowedRoles)) {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
+      return NextResponse.redirect(
+        new URL(getDefaultDashboardPath(userRole), request.url),
+      );
     }
   }
 

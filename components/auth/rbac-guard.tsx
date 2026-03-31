@@ -1,34 +1,21 @@
 "use client";
 
-import { ReactNode, useEffect, useMemo, useState } from "react";
+import { ReactNode, useMemo } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { getStoredUser } from "@/lib/auth-session";
-import { getStoredRoleAccessMap, roleAccessConfigEvent } from "@/lib/rbac-config";
+import { useStoredUser } from "@/lib/auth-session";
+import { useStoredRoleAccessMap } from "@/lib/rbac-config";
 import {
   getAllowedRolesForPathFromConfig,
   hasRequiredRole,
-  SessionUser,
 } from "@/lib/rbac";
 
 export function RbacGuard({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [currentUser] = useState<SessionUser | null>(() => getStoredUser());
-  const [roleAccessMap, setRoleAccessMap] = useState(() => getStoredRoleAccessMap());
-
-  useEffect(() => {
-    const syncConfig = () => setRoleAccessMap(getStoredRoleAccessMap());
-
-    window.addEventListener(roleAccessConfigEvent, syncConfig);
-    window.addEventListener("storage", syncConfig);
-
-    return () => {
-      window.removeEventListener(roleAccessConfigEvent, syncConfig);
-      window.removeEventListener("storage", syncConfig);
-    };
-  }, []);
+  const currentUser = useStoredUser();
+  const roleAccessMap = useStoredRoleAccessMap();
 
   const allowedRoles = useMemo(
     () => getAllowedRolesForPathFromConfig(pathname, roleAccessMap),
