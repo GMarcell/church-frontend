@@ -13,19 +13,28 @@ import {
   useUpdateUser,
   useUsers,
 } from "@/services/user";
-import { User } from "@/type/user";
+import { CreateUserDto, UpdateUserDto, User } from "@/type/user";
 
-const toUserPayload = (values: FormValues) => {
+const toUserBasePayload = (values: FormValues) => ({
+  email: String(values.email),
+  role: String(values.role),
+  regionId:
+    String(values.role) === "COORDINATOR" && values.regionId
+      ? String(values.regionId)
+      : undefined,
+});
+
+const toCreateUserPayload = (values: FormValues): CreateUserDto => ({
+  ...toUserBasePayload(values),
+  password: String(values.password),
+});
+
+const toUpdateUserPayload = (values: FormValues): UpdateUserDto => {
   const password = String(values.password ?? "").trim();
 
   return {
-    email: String(values.email),
+    ...toUserBasePayload(values),
     password: password || undefined,
-    role: String(values.role),
-    regionId:
-      String(values.role) === "COORDINATOR" && values.regionId
-        ? String(values.regionId)
-        : undefined,
   };
 };
 
@@ -135,13 +144,13 @@ export default function UsersPage() {
         setPage(1);
       }}
       onCreate={async (values) => {
-        await createUser.mutateAsync(toUserPayload(values));
+        await createUser.mutateAsync(toCreateUserPayload(values));
       }}
       onUpdate={async (item, values) => {
         try {
           await updateUser.mutateAsync({
             id: item.id,
-            data: toUserPayload(values),
+            data: toUpdateUserPayload(values),
           });
         } catch (error) {
           throw new Error(getErrorMessage(error, "Failed to update user."));
