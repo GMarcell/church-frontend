@@ -115,9 +115,16 @@ export default function FamiliesPage() {
     return regions.filter(
       (region) =>
         region.id === currentUser?.regionId ||
+        region.coordinatorId === currentUser?.memberId ||
         region.coordinatorId === currentUser?.id,
     );
-  }, [currentUser?.id, currentUser?.regionId, isCoordinator, regionResult?.items]);
+  }, [
+    currentUser?.id,
+    currentUser?.memberId,
+    currentUser?.regionId,
+    isCoordinator,
+    regionResult?.items,
+  ]);
   const accessibleRegionIds = useMemo(
     () => new Set(accessibleRegions.map((region) => region.id)),
     [accessibleRegions],

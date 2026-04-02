@@ -1,5 +1,4 @@
 import { Branch } from "./branch";
-import { User } from "./user";
 
 export type RegionCount = {
   id: string;
@@ -15,7 +14,14 @@ export type CreateRegionDto = {
 export type UpdateRegionDto = Partial<CreateRegionDto>;
 
 export type AssignRegionCoordinatorDto = {
-  coordinatorId: string | null;
+  memberId: string | null;
+};
+
+export type RegionCoordinatorMember = {
+  id: string;
+  name: string;
+  email?: string;
+  familyId?: string;
 };
 
 export type Regions = {
@@ -25,5 +31,5 @@ export type Regions = {
   coordinatorId?: string | null;
   createdAt: string;
   branch?: Branch;
-  coordinator?: User | null;
+  coordinator?: RegionCoordinatorMember | null;
 };

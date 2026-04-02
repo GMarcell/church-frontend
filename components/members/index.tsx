@@ -81,6 +81,7 @@ export default function MembersPage() {
           (region) =>
             !isCoordinator ||
             region.id === currentUser?.regionId ||
+            region.coordinatorId === currentUser?.memberId ||
             region.coordinatorId === currentUser?.id,
         )
         .map((region) => region.id),
@@ -93,6 +94,7 @@ export default function MembersPage() {
     return families.filter((family) => accessibleRegionIds.has(family.regionId));
   }, [
     currentUser?.id,
+    currentUser?.memberId,
     currentUser?.regionId,
     familyResult?.items,
     isCoordinator,

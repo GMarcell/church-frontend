@@ -33,7 +33,7 @@ import {
   useRegions,
   useUpdateRegion,
 } from "@/services/region";
-import { useUsers } from "@/services/user";
+import { useMembers } from "@/services/member";
 import { Regions } from "@/type/region";
 
 const toRegionPayload = (values: FormValues) => ({
@@ -52,11 +52,8 @@ export default function RegionsPage() {
   const [assignmentError, setAssignmentError] = useState<string | null>(null);
   const { data: regionResult, isLoading } = useRegions({ page, limit });
   const { data: branchResult } = useBranches({ page: 1, limit: 100 });
-  const { data: userResult } = useUsers({ page: 1, limit: 200 });
+  const { data: memberResult } = useMembers({ page: 1, limit: 500 });
   const branches = branchResult?.items ?? [];
-  const coordinatorUsers = (userResult?.items ?? []).filter(
-    (user) => user.role === "COORDINATOR",
-  );
   const createRegion = useCreateRegion();
   const updateRegion = useUpdateRegion();
   const deleteRegion = useDeleteRegion();
@@ -68,12 +65,27 @@ export default function RegionsPage() {
       return regions;
     }
 
-    return regions.filter(
+      return regions.filter(
       (region) =>
         region.id === currentUser?.regionId ||
-        region.coordinatorId === currentUser?.id,
+        region.coordinatorId === currentUser?.memberId,
     );
-  }, [currentUser?.id, currentUser?.regionId, isCoordinator, regionResult?.items]);
+  }, [
+    currentUser?.memberId,
+    currentUser?.regionId,
+    isCoordinator,
+    regionResult?.items,
+  ]);
+
+  const assignableMembers = useMemo(() => {
+    if (!assigningRegion) {
+      return [];
+    }
+
+    return (memberResult?.items ?? []).filter(
+      (member) => member.family?.regionId === assigningRegion.id,
+    );
+  }, [assigningRegion, memberResult?.items]);
 
   const openAssignDialog = (region: Regions) => {
     setAssigningRegion(region);
@@ -100,7 +112,7 @@ export default function RegionsPage() {
       await assignCoordinator.mutateAsync({
         id: assigningRegion.id,
         data: {
-          coordinatorId:
+          memberId:
             selectedCoordinatorId && selectedCoordinatorId !== "none"
               ? selectedCoordinatorId
               : null,
@@ -157,7 +169,11 @@ export default function RegionsPage() {
           {
             key: "coordinator",
             label: "Coordinator",
-            render: (item) => item.coordinator?.email ?? item.coordinatorId ?? "Unassigned",
+            render: (item) =>
+              item.coordinator?.name ??
+              item.coordinator?.email ??
+              item.coordinatorId ??
+              "Unassigned",
           },
           {
             key: "createdAt",
@@ -169,7 +185,9 @@ export default function RegionsPage() {
         filterItems={(item, query) =>
           item.name.toLowerCase().includes(query) ||
           (item.branch?.name ?? "").toLowerCase().includes(query) ||
-          (item.coordinator?.email ?? "").toLowerCase().includes(query)
+          (item.coordinator?.name ?? item.coordinator?.email ?? "")
+            .toLowerCase()
+            .includes(query)
         }
         getEditValues={(item) => ({
           name: item.name,
@@ -252,9 +270,10 @@ export default function RegionsPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">No coordinator</SelectItem>
-                {coordinatorUsers.map((user) => (
-                  <SelectItem key={user.id} value={user.id}>
-                    {user.email}
+                {assignableMembers.map((member) => (
+                  <SelectItem key={member.id} value={member.id}>
+                    {member.name}
+                    {member.family?.familyName ? ` - ${member.family.familyName}` : ""}
                   </SelectItem>
                 ))}
               </SelectContent>
