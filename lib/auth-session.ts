@@ -27,6 +27,7 @@ export const persistAuthSession = (payload: {
 
   if (payload.token) {
     localStorage.setItem(ACCESS_TOKEN_KEY, payload.token);
+    setCookie(ACCESS_TOKEN_KEY, payload.token);
   }
 
   if (payload.user) {
@@ -54,6 +55,7 @@ export const clearAuthSession = () => {
     window.dispatchEvent(new CustomEvent(AUTH_SESSION_EVENT));
   }
 
+  clearCookie(ACCESS_TOKEN_KEY);
   clearCookie("user_role");
   clearCookie("user_email");
   clearCookie("user_name");
