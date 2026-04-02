@@ -18,27 +18,20 @@ import {
   MemberLoginFormValues,
   memberLoginSchema,
 } from "@/schemas/auth.schema";
-import { useForm, useWatch } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { login, memberLogin } from "@/services/auth";
 import { useRouter } from "next/navigation";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { ButtonGroup } from "../ui/button-group";
+import { Eye, EyeClosed } from "lucide-react";
 
 export default function LoginForm() {
   const router = useRouter();
+  const [isShow, setIsShow] = useState(false);
   const [mode, setMode] = useState<"admin" | "member">("admin");
 
   const adminForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
-    defaultValues: {
-      role: "ADMIN",
-    },
   });
 
   const memberForm = useForm<MemberLoginFormValues>({
@@ -48,21 +41,13 @@ export default function LoginForm() {
   const {
     register,
     handleSubmit,
-    setValue,
     formState: { errors, isSubmitting },
   } = adminForm;
-  const selectedRole = useWatch({
-    control: adminForm.control,
-    name: "role",
-  });
 
   const {
     register: registerMember,
     handleSubmit: handleSubmitMember,
-    formState: {
-      errors: memberErrors,
-      isSubmitting: isMemberSubmitting,
-    },
+    formState: { errors: memberErrors, isSubmitting: isMemberSubmitting },
   } = memberForm;
 
   const onSubmit = async (values: LoginFormValues) => {
@@ -109,7 +94,7 @@ export default function LoginForm() {
           </CardTitle>
           <CardDescription>
             {mode === "admin"
-              ? "Enter your email, password, and role to access the dashboard."
+              ? "Enter your email and password to access the dashboard."
               : "Login with your full name and birth date to update your own profile."}
           </CardDescription>
         </CardHeader>
@@ -127,41 +112,37 @@ export default function LoginForm() {
                     {...register("email")}
                   />
                   {errors.email && (
-                    <p className="text-sm text-red-500">{errors.email.message}</p>
-                  )}
-                </div>
-
-                <div className="grid gap-2">
-                  <Label htmlFor="password">Password</Label>
-                  <Input id="password" type="password" {...register("password")} />
-                  {errors.password && (
                     <p className="text-sm text-red-500">
-                      {errors.password.message}
+                      {errors.email.message}
                     </p>
                   )}
                 </div>
 
                 <div className="grid gap-2">
-                  <Label htmlFor="role">Role</Label>
-                  <Select
-                    value={selectedRole}
-                    onValueChange={(value) =>
-                      setValue("role", value as "ADMIN" | "COORDINATOR", {
-                        shouldDirty: true,
-                        shouldValidate: true,
-                      })
-                    }
-                  >
-                    <SelectTrigger id="role">
-                      <SelectValue placeholder="Select your role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ADMIN">Admin</SelectItem>
-                      <SelectItem value="COORDINATOR">Coordinator</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {errors.role && (
-                    <p className="text-sm text-red-500">{errors.role.message}</p>
+                  <Label htmlFor="password">Password</Label>
+                  <ButtonGroup className=" w-full">
+                    <Input
+                      id="password"
+                      type={isShow ? "text" : "password"}
+                      className="border border-r-0"
+                      {...register("password")}
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="rounded border border-l-0"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setIsShow((prev) => !prev);
+                      }}
+                    >
+                      {isShow ? <Eye /> : <EyeClosed />}
+                    </Button>
+                  </ButtonGroup>
+                  {errors.password && (
+                    <p className="text-sm text-red-500">
+                      {errors.password.message}
+                    </p>
                   )}
                 </div>
               </div>

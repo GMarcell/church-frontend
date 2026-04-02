@@ -38,8 +38,10 @@ import {
   useFamilies,
   useUpdateFamily,
 } from "@/services/family";
+import { useMembers, useUpdateMember } from "@/services/member";
 import { useRegions } from "@/services/region";
 import { Family } from "@/type/family";
+import { Member } from "@/type/member";
 
 type FamilyFormValues = {
   familyName: string;
@@ -87,6 +89,12 @@ const genderOptions = [
   { label: "Female", value: "FEMALE" },
 ];
 
+const formatMemberRole = (role: string) =>
+  role
+    .toLowerCase()
+    .replaceAll("_", " ")
+    .replace(/^./, (letter) => letter.toUpperCase());
+
 export default function FamiliesPage() {
   const currentUser = useStoredUser();
   const isCoordinator = currentUser?.role === "COORDINATOR";
@@ -97,6 +105,20 @@ export default function FamiliesPage() {
   const [error, setError] = useState<string | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [membersFamilyId, setMembersFamilyId] = useState<string | null>(null);
+  const [selectedFamilyMember, setSelectedFamilyMember] = useState<Member | null>(
+    null,
+  );
+  const [memberValues, setMemberValues] = useState({
+    name: "",
+    gender: "",
+    birthDate: "",
+    phone: "",
+    email: "",
+    role: "",
+    isActive: true,
+  });
+  const [memberError, setMemberError] = useState<string | null>(null);
   const [createValues, setCreateValues] =
     useState<FamilyFormValues>(initialFamilyValues);
   const [createMembers, setCreateMembers] = useState<FamilyMemberDraft[]>([]);
@@ -104,6 +126,10 @@ export default function FamiliesPage() {
     useState<FamilyFormValues>(initialFamilyValues);
 
   const { data: familyResult, isLoading } = useFamilies({ page, limit });
+  const { data: memberResult, isLoading: isMembersLoading } = useMembers({
+    page: 1,
+    limit: 1000,
+  });
   const { data: regionResult } = useRegions({ page: 1, limit: 100 });
   const accessibleRegions = useMemo(() => {
     const regions = regionResult?.items ?? [];
@@ -132,6 +158,7 @@ export default function FamiliesPage() {
   const createFamily = useCreateFamily();
   const updateFamily = useUpdateFamily();
   const deleteFamily = useDeleteFamily();
+  const updateMember = useUpdateMember();
 
   const filteredFamilies = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -152,6 +179,13 @@ export default function FamiliesPage() {
   const canGoNext = familyResult
     ? familyResult.meta.page < familyResult.meta.totalPages
     : false;
+  const familyMembers = useMemo(() => {
+    if (!membersFamilyId) return [];
+
+    return (memberResult?.items ?? []).filter(
+      (member) => member.familyId === membersFamilyId,
+    );
+  }, [memberResult?.items, membersFamilyId]);
 
   const resetCreateForm = () => {
     setCreateValues({
@@ -177,6 +211,14 @@ export default function FamiliesPage() {
       setEditingItemId(null);
       setEditValues(initialFamilyValues);
       setError(null);
+    }
+  };
+
+  const handleMembersOpenChange = (open: boolean) => {
+    if (!open) {
+      setMembersFamilyId(null);
+      setSelectedFamilyMember(null);
+      setMemberError(null);
     }
   };
 
@@ -230,6 +272,28 @@ export default function FamiliesPage() {
       familyName: item.familyName,
       address: item.address,
       regionId: item.regionId,
+    });
+  };
+
+  const handleOpenMembers = (familyId: string) => {
+    setMessage(null);
+    setError(null);
+    setMemberError(null);
+    setSelectedFamilyMember(null);
+    setMembersFamilyId(familyId);
+  };
+
+  const handleOpenMemberEditor = (member: Member) => {
+    setMemberError(null);
+    setSelectedFamilyMember(member);
+    setMemberValues({
+      name: member.name,
+      gender: member.gender,
+      birthDate: member.birthDate.slice(0, 10),
+      phone: member.phone,
+      email: member.email,
+      role: member.role,
+      isActive: member.isActive,
     });
   };
 
@@ -319,6 +383,37 @@ export default function FamiliesPage() {
       setMessage("Family deleted successfully.");
     } catch (deleteError) {
       setError(getErrorMessage(deleteError, "Failed to delete family."));
+    }
+  };
+
+  const handleMemberSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!selectedFamilyMember) {
+      return;
+    }
+
+    try {
+      setMemberError(null);
+      setMessage(null);
+      await updateMember.mutateAsync({
+        id: selectedFamilyMember.id,
+        data: {
+          name: memberValues.name,
+          gender: memberValues.gender,
+          birthDate: new Date(memberValues.birthDate).toISOString(),
+          phone: memberValues.phone,
+          email: memberValues.email,
+          role: memberValues.role,
+          isActive: memberValues.isActive,
+        },
+      });
+      setMessage("Family member updated successfully.");
+      setSelectedFamilyMember(null);
+    } catch (submitError) {
+      setMemberError(
+        getErrorMessage(submitError, "Failed to update family member."),
+      );
     }
   };
 
@@ -826,6 +921,283 @@ export default function FamiliesPage() {
                                       </Button>
                                     </DialogFooter>
                                   </form>
+                                </DialogContent>
+                              </Dialog>
+
+                              <Dialog
+                                open={membersFamilyId === item.id}
+                                onOpenChange={handleMembersOpenChange}
+                              >
+                                <DialogTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleOpenMembers(item.id)}
+                                  >
+                                    Members
+                                  </Button>
+                                </DialogTrigger>
+
+                                <DialogContent className="max-h-[90vh] overflow-y-auto rounded-[1.5rem] border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(249,247,241,0.98))] p-5 shadow-[0_40px_90px_-40px_rgba(16,28,56,0.45)] sm:rounded-[1.75rem] sm:p-6">
+                                  <DialogHeader>
+                                    <DialogTitle className="text-xl tracking-tight sm:text-2xl">
+                                      Family Members
+                                    </DialogTitle>
+                                    <DialogDescription>
+                                      Edit members assigned to {item.familyName}.
+                                    </DialogDescription>
+                                  </DialogHeader>
+
+                                  <div className="space-y-4">
+                                    <div className="space-y-3 rounded-[1.25rem] border border-border/70 bg-white/70 p-4">
+                                      <div>
+                                        <h3 className="text-base font-semibold tracking-tight">
+                                          Household List
+                                        </h3>
+                                        <p className="text-sm text-muted-foreground">
+                                          Choose a member to update their profile
+                                          data from this family menu.
+                                        </p>
+                                      </div>
+
+                                      {isMembersLoading ? (
+                                        <div className="rounded-2xl border border-dashed border-border/70 bg-background/70 px-4 py-6 text-sm text-muted-foreground">
+                                          Loading family members...
+                                        </div>
+                                      ) : familyMembers.length ? (
+                                        <div className="space-y-3">
+                                          {familyMembers.map((member) => (
+                                            <div
+                                              key={member.id}
+                                              className="flex flex-col gap-3 rounded-2xl border border-border/70 bg-background/80 p-4 md:flex-row md:items-center md:justify-between"
+                                            >
+                                              <div>
+                                                <p className="text-sm font-medium">
+                                                  {member.name}
+                                                </p>
+                                                <p className="text-xs text-muted-foreground">
+                                                  {formatMemberRole(member.role)} •{" "}
+                                                  {member.phone || "No phone"}
+                                                </p>
+                                              </div>
+
+                                              <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() =>
+                                                  handleOpenMemberEditor(member)
+                                                }
+                                              >
+                                                Edit Member
+                                              </Button>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      ) : (
+                                        <div className="rounded-2xl border border-dashed border-border/70 bg-background/70 px-4 py-6 text-sm text-muted-foreground">
+                                          No members found for this family.
+                                        </div>
+                                      )}
+                                    </div>
+
+                                    {selectedFamilyMember ? (
+                                      <form
+                                        className="space-y-4 rounded-[1.25rem] border border-border/70 bg-white/70 p-4"
+                                        onSubmit={handleMemberSubmit}
+                                      >
+                                        <div>
+                                          <h3 className="text-base font-semibold tracking-tight">
+                                            Edit {selectedFamilyMember.name}
+                                          </h3>
+                                          <p className="text-sm text-muted-foreground">
+                                            Update the selected family member&apos;s
+                                            information below.
+                                          </p>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                          <div className="space-y-2">
+                                            <Label htmlFor={`edit-member-name-${item.id}`}>
+                                              Full Name
+                                            </Label>
+                                            <Input
+                                              id={`edit-member-name-${item.id}`}
+                                              className="h-11 rounded-2xl border-border/70 bg-white/80 px-4"
+                                              required
+                                              value={memberValues.name}
+                                              onChange={(event) =>
+                                                setMemberValues((current) => ({
+                                                  ...current,
+                                                  name: event.target.value,
+                                                }))
+                                              }
+                                            />
+                                          </div>
+
+                                          <div className="space-y-2">
+                                            <Label htmlFor={`edit-member-gender-${item.id}`}>
+                                              Gender
+                                            </Label>
+                                            <Select
+                                              value={memberValues.gender || undefined}
+                                              onValueChange={(value) =>
+                                                setMemberValues((current) => ({
+                                                  ...current,
+                                                  gender: value,
+                                                }))
+                                              }
+                                            >
+                                              <SelectTrigger
+                                                id={`edit-member-gender-${item.id}`}
+                                              >
+                                                <SelectValue placeholder="Select Gender" />
+                                              </SelectTrigger>
+                                              <SelectContent>
+                                                {genderOptions.map((option) => (
+                                                  <SelectItem
+                                                    key={option.value}
+                                                    value={option.value}
+                                                  >
+                                                    {option.label}
+                                                  </SelectItem>
+                                                ))}
+                                              </SelectContent>
+                                            </Select>
+                                          </div>
+
+                                          <div className="space-y-2">
+                                            <Label htmlFor={`edit-member-birthdate-${item.id}`}>
+                                              Birth Date
+                                            </Label>
+                                            <Input
+                                              id={`edit-member-birthdate-${item.id}`}
+                                              type="date"
+                                              className="h-11 rounded-2xl border-border/70 bg-white/80 px-4"
+                                              required
+                                              value={memberValues.birthDate}
+                                              onChange={(event) =>
+                                                setMemberValues((current) => ({
+                                                  ...current,
+                                                  birthDate: event.target.value,
+                                                }))
+                                              }
+                                            />
+                                          </div>
+
+                                          <div className="space-y-2">
+                                            <Label htmlFor={`edit-member-role-${item.id}`}>
+                                              Role
+                                            </Label>
+                                            <Select
+                                              value={memberValues.role || undefined}
+                                              onValueChange={(value) =>
+                                                setMemberValues((current) => ({
+                                                  ...current,
+                                                  role: value,
+                                                }))
+                                              }
+                                            >
+                                              <SelectTrigger
+                                                id={`edit-member-role-${item.id}`}
+                                              >
+                                                <SelectValue placeholder="Select Role" />
+                                              </SelectTrigger>
+                                              <SelectContent>
+                                                {memberRoleOptions.map((option) => (
+                                                  <SelectItem
+                                                    key={option.value}
+                                                    value={option.value}
+                                                  >
+                                                    {option.label}
+                                                  </SelectItem>
+                                                ))}
+                                              </SelectContent>
+                                            </Select>
+                                          </div>
+
+                                          <div className="space-y-2">
+                                            <Label htmlFor={`edit-member-phone-${item.id}`}>
+                                              Phone
+                                            </Label>
+                                            <Input
+                                              id={`edit-member-phone-${item.id}`}
+                                              className="h-11 rounded-2xl border-border/70 bg-white/80 px-4"
+                                              required
+                                              value={memberValues.phone}
+                                              onChange={(event) =>
+                                                setMemberValues((current) => ({
+                                                  ...current,
+                                                  phone: event.target.value,
+                                                }))
+                                              }
+                                            />
+                                          </div>
+
+                                          <div className="space-y-2">
+                                            <Label htmlFor={`edit-member-email-${item.id}`}>
+                                              Email
+                                            </Label>
+                                            <Input
+                                              id={`edit-member-email-${item.id}`}
+                                              type="email"
+                                              className="h-11 rounded-2xl border-border/70 bg-white/80 px-4"
+                                              required
+                                              value={memberValues.email}
+                                              onChange={(event) =>
+                                                setMemberValues((current) => ({
+                                                  ...current,
+                                                  email: event.target.value,
+                                                }))
+                                              }
+                                            />
+                                          </div>
+
+                                          <label className="flex h-11 items-center gap-2 rounded-2xl border border-border/70 bg-white/80 px-4 text-sm md:col-span-2">
+                                            <input
+                                              type="checkbox"
+                                              checked={memberValues.isActive}
+                                              onChange={(event) =>
+                                                setMemberValues((current) => ({
+                                                  ...current,
+                                                  isActive: event.target.checked,
+                                                }))
+                                              }
+                                            />
+                                            Active member
+                                          </label>
+                                        </div>
+
+                                        {memberError ? (
+                                          <p className="text-sm text-red-500">
+                                            {memberError}
+                                          </p>
+                                        ) : null}
+
+                                        <DialogFooter className="flex-col-reverse gap-2 sm:flex-row">
+                                          <Button
+                                            type="button"
+                                            variant="outline"
+                                            className="w-full sm:w-auto"
+                                            onClick={() =>
+                                              setSelectedFamilyMember(null)
+                                            }
+                                          >
+                                            Cancel
+                                          </Button>
+                                          <Button
+                                            disabled={updateMember.isPending}
+                                            type="submit"
+                                            className="w-full sm:w-auto"
+                                          >
+                                            {updateMember.isPending
+                                              ? "Saving..."
+                                              : "Save Member"}
+                                          </Button>
+                                        </DialogFooter>
+                                      </form>
+                                    ) : null}
+                                  </div>
                                 </DialogContent>
                               </Dialog>
 

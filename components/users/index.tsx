@@ -15,15 +15,19 @@ import {
 } from "@/services/user";
 import { User } from "@/type/user";
 
-const toUserPayload = (values: FormValues) => ({
-  email: String(values.email),
-  password: String(values.password),
-  role: String(values.role),
-  regionId:
-    String(values.role) === "COORDINATOR" && values.regionId
-      ? String(values.regionId)
-      : undefined,
-});
+const toUserPayload = (values: FormValues) => {
+  const password = String(values.password ?? "").trim();
+
+  return {
+    email: String(values.email),
+    password: password || undefined,
+    role: String(values.role),
+    regionId:
+      String(values.role) === "COORDINATOR" && values.regionId
+        ? String(values.regionId)
+        : undefined,
+  };
+};
 
 export default function UsersPage() {
   const [page, setPage] = useState(1);
@@ -55,7 +59,8 @@ export default function UsersPage() {
           name: "password",
           label: "Password",
           placeholder: "secret123",
-          required: true,
+          createRequired: true,
+          editRequired: false,
         },
         {
           name: "role",

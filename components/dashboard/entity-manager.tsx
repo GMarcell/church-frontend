@@ -42,6 +42,8 @@ type FieldConfig = {
   type?: "text" | "email" | "number" | "date" | "select" | "checkbox";
   options?: SelectOption[];
   required?: boolean;
+  createRequired?: boolean;
+  editRequired?: boolean;
   checkboxLabel?: string;
 };
 
@@ -197,6 +199,18 @@ export function EntityManager<TItem>({
     }
   };
 
+  const isFieldRequired = (field: FieldConfig, mode: "create" | "edit") => {
+    if (mode === "create" && typeof field.createRequired === "boolean") {
+      return field.createRequired;
+    }
+
+    if (mode === "edit" && typeof field.editRequired === "boolean") {
+      return field.editRequired;
+    }
+
+    return field.required;
+  };
+
   return (
     <div className="flex h-full min-h-0 flex-col">
       <Card className="flex min-h-0 flex-1 flex-col overflow-hidden border-white/70">
@@ -272,7 +286,7 @@ export function EntityManager<TItem>({
                               className="h-11 rounded-2xl border-border/70 bg-white/80 px-4"
                               value={String(values[field.name] ?? "")}
                               placeholder={field.placeholder}
-                              required={field.required}
+                              required={isFieldRequired(field, "create")}
                               onChange={(event) =>
                                 handleChange(field, event.target.value)
                               }
@@ -447,7 +461,7 @@ export function EntityManager<TItem>({
                                                   className="h-11 rounded-2xl border-border/70 bg-white/80 px-4"
                                                   value={String(values[field.name] ?? "")}
                                                   placeholder={field.placeholder}
-                                                  required={field.required}
+                                                  required={isFieldRequired(field, "edit")}
                                                   onChange={(event) =>
                                                     handleChange(field, event.target.value)
                                                   }

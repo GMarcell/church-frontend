@@ -5,7 +5,6 @@ import { StandardResponse } from "@/type/shared";
 interface LoginDto {
   email: string;
   password: string;
-  role: string;
 }
 
 interface MemberLoginDto {
@@ -83,7 +82,7 @@ export const login = async (data: LoginDto) => {
         tokenPayload?.preferred_username,
       memberId: response.data?.user?.memberId ?? tokenPayload?.memberId,
       regionId: response.data?.user?.regionId ?? tokenPayload?.regionId,
-      role: response.data?.user?.role ?? tokenPayload?.role ?? data.role,
+      role: response.data?.user?.role ?? tokenPayload?.role ?? "",
     },
   });
 
