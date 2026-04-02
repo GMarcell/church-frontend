@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useStoredUser } from "@/lib/auth-session";
 import {
   EntityManager,
@@ -11,6 +11,7 @@ import { getErrorMessage } from "@/lib/helper";
 import { cn } from "@/lib/utils";
 import MemberSelfService from "./self-service";
 import { useFamilies } from "@/services/family";
+import { useRegions } from "@/services/region";
 import {
   getPelkatLabel,
   useCreateMember,
@@ -66,11 +67,51 @@ const statusBadgeClasses: Record<"Active" | "Inactive", string> = {
 
 export default function MembersPage() {
   const currentUser = useStoredUser();
+  const isCoordinator = currentUser?.role === "COORDINATOR";
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const { data: memberResult, isLoading } = useMembers({ page, limit });
   const { data: familyResult } = useFamilies({ page: 1, limit: 100 });
-  const families = familyResult?.items ?? [];
+  const { data: regionResult } = useRegions({ page: 1, limit: 100 });
+  const accessibleFamilies = useMemo(() => {
+    const families = familyResult?.items ?? [];
+    const accessibleRegionIds = new Set(
+      (regionResult?.items ?? [])
+        .filter(
+          (region) =>
+            !isCoordinator ||
+            region.id === currentUser?.regionId ||
+            region.coordinatorId === currentUser?.id,
+        )
+        .map((region) => region.id),
+    );
+
+    if (!isCoordinator) {
+      return families;
+    }
+
+    return families.filter((family) => accessibleRegionIds.has(family.regionId));
+  }, [
+    currentUser?.id,
+    currentUser?.regionId,
+    familyResult?.items,
+    isCoordinator,
+    regionResult?.items,
+  ]);
+  const accessibleFamilyIds = useMemo(
+    () => new Set(accessibleFamilies.map((family) => family.id)),
+    [accessibleFamilies],
+  );
+  const visibleMembers = useMemo(
+    () =>
+      (memberResult?.items ?? []).filter(
+        (member) =>
+          !isCoordinator ||
+          accessibleFamilyIds.has(member.familyId) ||
+          member.family?.regionId === currentUser?.regionId,
+      ),
+    [accessibleFamilyIds, currentUser?.regionId, isCoordinator, memberResult?.items],
+  );
   const createMember = useCreateMember();
   const updateMember = useUpdateMember();
   const deleteMember = useDeleteMember();
@@ -83,7 +124,11 @@ export default function MembersPage() {
     <EntityManager<Member>
       title="Members"
       entityLabel="Member"
-      description="Track member profiles, household assignment, and status."
+      description={
+        isCoordinator
+          ? "Manage member profiles for families in your assigned region."
+          : "Track member profiles, household assignment, and status."
+      }
       createLabel="Create Member"
       updateLabel="Update Member"
       searchPlaceholder="Search by name, email, phone, or family"
@@ -135,7 +180,7 @@ export default function MembersPage() {
           label: "Family",
           type: "select",
           required: true,
-          options: families.map((family) => ({
+          options: accessibleFamilies.map((family) => ({
             label: family.familyName,
             value: family.id,
           })),
@@ -157,7 +202,7 @@ export default function MembersPage() {
         familyId: "",
         isActive: true,
       }}
-      items={memberResult?.items ?? []}
+      items={visibleMembers}
       columns={[
         {
           key: "name",
@@ -243,6 +288,7 @@ export default function MembersPage() {
       deletingId={deleteMember.variables ?? null}
       editingId={updateMember.variables?.id ?? null}
       pagination={memberResult?.meta}
+      canDelete={!isCoordinator}
       onPageChange={setPage}
       onPageSizeChange={(nextLimit) => {
         setLimit(nextLimit);

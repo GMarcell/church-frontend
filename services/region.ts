@@ -1,6 +1,7 @@
 import { api } from "@/lib/api";
 import { toPaginatedResult } from "@/lib/helper";
 import {
+  AssignRegionCoordinatorDto,
   CreateRegionDto,
   RegionCount,
   Regions,
@@ -82,6 +83,23 @@ export const updateRegion = async ({
   return res.data;
 };
 
+export const assignRegionCoordinator = async ({
+  id,
+  data,
+}: {
+  id: string;
+  data: AssignRegionCoordinatorDto;
+}): Promise<Regions> => {
+  const res = await api.patch<StandardResponse<Regions>, AssignRegionCoordinatorDto>(
+    `/v1/regions/${id}/coordinator`,
+    data,
+  );
+  if (!res.success) {
+    throw new Error("Failed to assign region coordinator");
+  }
+  return res.data;
+};
+
 export const deleteRegion = async (id: string) => {
   const res = await api.delete<StandardResponse<Regions>>(`/v1/regions/${id}`);
   if (!res.success) {
@@ -152,6 +170,23 @@ export const useUpdateRegion = () => {
 
   return useMutation({
     mutationFn: updateRegion,
+    onSuccess: async (_, variables) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: regionKeys.all }),
+        queryClient.invalidateQueries({ queryKey: regionKeys.counts }),
+        queryClient.invalidateQueries({
+          queryKey: regionKeys.detail(variables.id),
+        }),
+      ]);
+    },
+  });
+};
+
+export const useAssignRegionCoordinator = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: assignRegionCoordinator,
     onSuccess: async (_, variables) => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: regionKeys.all }),

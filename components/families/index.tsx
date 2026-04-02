@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useStoredUser } from "@/lib/auth-session";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -87,6 +88,8 @@ const genderOptions = [
 ];
 
 export default function FamiliesPage() {
+  const currentUser = useStoredUser();
+  const isCoordinator = currentUser?.role === "COORDINATOR";
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [query, setQuery] = useState("");
@@ -102,14 +105,32 @@ export default function FamiliesPage() {
 
   const { data: familyResult, isLoading } = useFamilies({ page, limit });
   const { data: regionResult } = useRegions({ page: 1, limit: 100 });
-  const regions = regionResult?.items ?? [];
+  const accessibleRegions = useMemo(() => {
+    const regions = regionResult?.items ?? [];
+
+    if (!isCoordinator) {
+      return regions;
+    }
+
+    return regions.filter(
+      (region) =>
+        region.id === currentUser?.regionId ||
+        region.coordinatorId === currentUser?.id,
+    );
+  }, [currentUser?.id, currentUser?.regionId, isCoordinator, regionResult?.items]);
+  const accessibleRegionIds = useMemo(
+    () => new Set(accessibleRegions.map((region) => region.id)),
+    [accessibleRegions],
+  );
   const createFamily = useCreateFamily();
   const updateFamily = useUpdateFamily();
   const deleteFamily = useDeleteFamily();
 
   const filteredFamilies = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
-    const families = familyResult?.items ?? [];
+    const families = (familyResult?.items ?? []).filter(
+      (item) => !isCoordinator || accessibleRegionIds.has(item.regionId),
+    );
     if (!normalizedQuery) return families;
 
     return families.filter(
@@ -118,7 +139,7 @@ export default function FamiliesPage() {
         item.address.toLowerCase().includes(normalizedQuery) ||
         (item.region?.name ?? "").toLowerCase().includes(normalizedQuery),
     );
-  }, [familyResult?.items, query]);
+  }, [accessibleRegionIds, familyResult?.items, isCoordinator, query]);
 
   const canGoPrevious = (familyResult?.meta.page ?? 1) > 1;
   const canGoNext = familyResult
@@ -126,7 +147,10 @@ export default function FamiliesPage() {
     : false;
 
   const resetCreateForm = () => {
-    setCreateValues(initialFamilyValues);
+    setCreateValues({
+      ...initialFamilyValues,
+      regionId: isCoordinator ? accessibleRegions[0]?.id ?? "" : "",
+    });
     setCreateMembers([]);
     setError(null);
   };
@@ -369,7 +393,7 @@ export default function FamiliesPage() {
                           <SelectValue placeholder="Select Region" />
                         </SelectTrigger>
                         <SelectContent>
-                          {regions.map((region) => (
+                          {accessibleRegions.map((region) => (
                             <SelectItem key={region.id} value={region.id}>
                               {region.name}
                             </SelectItem>
@@ -757,7 +781,7 @@ export default function FamiliesPage() {
                                             <SelectValue placeholder="Select Region" />
                                           </SelectTrigger>
                                           <SelectContent>
-                                            {regions.map((region) => (
+                                            {accessibleRegions.map((region) => (
                                               <SelectItem
                                                 key={region.id}
                                                 value={region.id}
@@ -798,17 +822,19 @@ export default function FamiliesPage() {
                                 </DialogContent>
                               </Dialog>
 
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                disabled={deleteFamily.isPending}
-                                onClick={() => handleDelete(item)}
-                              >
-                                {deleteFamily.isPending &&
-                                deleteFamily.variables === item.id
-                                  ? "Deleting..."
-                                  : "Delete"}
-                              </Button>
+                              {!isCoordinator ? (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  disabled={deleteFamily.isPending}
+                                  onClick={() => handleDelete(item)}
+                                >
+                                  {deleteFamily.isPending &&
+                                  deleteFamily.variables === item.id
+                                    ? "Deleting..."
+                                    : "Delete"}
+                                </Button>
+                              ) : null}
                             </div>
                           </TableCell>
                         </TableRow>

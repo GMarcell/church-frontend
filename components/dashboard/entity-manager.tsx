@@ -76,6 +76,10 @@ interface EntityManagerProps<TItem> {
   onPageChange?: (page: number) => void;
   onPageSizeChange?: (pageSize: number) => void;
   emptyMessage?: string;
+  canCreate?: boolean;
+  canEdit?: boolean;
+  canDelete?: boolean;
+  renderRowActions?: (item: TItem) => ReactNode;
 }
 
 export function EntityManager<TItem>({
@@ -103,6 +107,10 @@ export function EntityManager<TItem>({
   onPageChange,
   onPageSizeChange,
   emptyMessage = "No records found.",
+  canCreate = true,
+  canEdit = true,
+  canDelete = true,
+  renderRowActions,
 }: EntityManagerProps<TItem>) {
   const [query, setQuery] = useState("");
   const [values, setValues] = useState<FormValues>(initialValues);
@@ -206,88 +214,90 @@ export function EntityManager<TItem>({
               </p>
             </div>
 
-            <Dialog open={isCreateOpen} onOpenChange={handleCreateOpenChange}>
-              <DialogTrigger asChild>
-                <Button className="w-full sm:w-auto sm:min-w-36">{createLabel}</Button>
-              </DialogTrigger>
+            {canCreate ? (
+              <Dialog open={isCreateOpen} onOpenChange={handleCreateOpenChange}>
+                <DialogTrigger asChild>
+                  <Button className="w-full sm:w-auto sm:min-w-36">{createLabel}</Button>
+                </DialogTrigger>
 
-              <DialogContent className="max-h-[90vh] overflow-y-auto rounded-[1.5rem] border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(249,247,241,0.98))] p-5 shadow-[0_40px_90px_-40px_rgba(16,28,56,0.45)] sm:rounded-[1.75rem] sm:p-6">
-                <DialogHeader>
-                  <DialogTitle className="text-xl tracking-tight sm:text-2xl">
-                    {createLabel}
-                  </DialogTitle>
-                  <DialogDescription>
-                    Fill in the details below to add a new{" "}
-                    {entityLabel.toLowerCase()}.
-                  </DialogDescription>
-                </DialogHeader>
+                <DialogContent className="max-h-[90vh] overflow-y-auto rounded-[1.5rem] border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(249,247,241,0.98))] p-5 shadow-[0_40px_90px_-40px_rgba(16,28,56,0.45)] sm:rounded-[1.75rem] sm:p-6">
+                  <DialogHeader>
+                    <DialogTitle className="text-xl tracking-tight sm:text-2xl">
+                      {createLabel}
+                    </DialogTitle>
+                    <DialogDescription>
+                      Fill in the details below to add a new{" "}
+                      {entityLabel.toLowerCase()}.
+                    </DialogDescription>
+                  </DialogHeader>
 
-                <form className="space-y-4" onSubmit={handleSubmit}>
-                  <div className="grid grid-cols-1 gap-4">
-                    {fields.map((field) => (
-                      <div className="space-y-2" key={field.name}>
-                        <Label htmlFor={`create-${field.name}`}>{field.label}</Label>
+                  <form className="space-y-4" onSubmit={handleSubmit}>
+                    <div className="grid grid-cols-1 gap-4">
+                      {fields.map((field) => (
+                        <div className="space-y-2" key={field.name}>
+                          <Label htmlFor={`create-${field.name}`}>{field.label}</Label>
 
-                        {field.type === "select" ? (
-                          <Select
-                            value={String(values[field.name] ?? "") || undefined}
-                            onValueChange={(value) => handleChange(field, value)}
-                          >
-                            <SelectTrigger id={`create-${field.name}`}>
-                              <SelectValue placeholder={`Select ${field.label}`} />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {field.options?.map((option) => (
-                                <SelectItem key={option.value} value={option.value}>
-                                  {option.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        ) : field.type === "checkbox" ? (
-                          <label className="flex h-11 items-center gap-2 rounded-2xl border border-border/70 bg-white/80 px-4 text-sm">
-                            <input
+                          {field.type === "select" ? (
+                            <Select
+                              value={String(values[field.name] ?? "") || undefined}
+                              onValueChange={(value) => handleChange(field, value)}
+                            >
+                              <SelectTrigger id={`create-${field.name}`}>
+                                <SelectValue placeholder={`Select ${field.label}`} />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {field.options?.map((option) => (
+                                  <SelectItem key={option.value} value={option.value}>
+                                    {option.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          ) : field.type === "checkbox" ? (
+                            <label className="flex h-11 items-center gap-2 rounded-2xl border border-border/70 bg-white/80 px-4 text-sm">
+                              <input
+                                id={`create-${field.name}`}
+                                type="checkbox"
+                                checked={Boolean(values[field.name])}
+                                onChange={(event) =>
+                                  handleChange(field, event.target.checked)
+                                }
+                              />
+                              {field.checkboxLabel ?? field.label}
+                            </label>
+                          ) : (
+                            <Input
                               id={`create-${field.name}`}
-                              type="checkbox"
-                              checked={Boolean(values[field.name])}
+                              type={field.type ?? "text"}
+                              className="h-11 rounded-2xl border-border/70 bg-white/80 px-4"
+                              value={String(values[field.name] ?? "")}
+                              placeholder={field.placeholder}
+                              required={field.required}
                               onChange={(event) =>
-                                handleChange(field, event.target.checked)
+                                handleChange(field, event.target.value)
                               }
                             />
-                            {field.checkboxLabel ?? field.label}
-                          </label>
-                        ) : (
-                          <Input
-                            id={`create-${field.name}`}
-                            type={field.type ?? "text"}
-                            className="h-11 rounded-2xl border-border/70 bg-white/80 px-4"
-                            value={String(values[field.name] ?? "")}
-                            placeholder={field.placeholder}
-                            required={field.required}
-                            onChange={(event) =>
-                              handleChange(field, event.target.value)
-                            }
-                          />
-                        )}
-                      </div>
-                    ))}
-                  </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
 
-                  {error ? <p className="text-sm text-red-500">{error}</p> : null}
+                    {error ? <p className="text-sm text-red-500">{error}</p> : null}
 
-                  <DialogFooter className="flex-col-reverse gap-2 sm:flex-row">
-                    <DialogClose asChild>
-                      <Button type="button" variant="outline" className="w-full sm:w-auto">
-                        Cancel
+                    <DialogFooter className="flex-col-reverse gap-2 sm:flex-row">
+                      <DialogClose asChild>
+                        <Button type="button" variant="outline" className="w-full sm:w-auto">
+                          Cancel
+                        </Button>
+                      </DialogClose>
+                      <Button disabled={isSubmitting} type="submit" className="w-full sm:w-auto">
+                        {isSubmitting ? "Saving..." : createLabel}
                       </Button>
-                    </DialogClose>
-                    <Button disabled={isSubmitting} type="submit" className="w-full sm:w-auto">
-                      {isSubmitting ? "Saving..." : createLabel}
-                    </Button>
-                  </DialogFooter>
-                </form>
-              </DialogContent>
-            </Dialog>
+                    </DialogFooter>
+                  </form>
+                </DialogContent>
+              </Dialog>
+            ) : null}
           </div>
         </CardHeader>
 
@@ -324,9 +334,11 @@ export function EntityManager<TItem>({
                         {column.label}
                       </TableHead>
                     ))}
-                    <TableHead className="sticky top-0 z-10 w-[180px] bg-[linear-gradient(180deg,rgba(247,244,235,0.98),rgba(255,255,255,0.92))] text-xs uppercase tracking-[0.18em] text-muted-foreground">
-                      Actions
-                    </TableHead>
+                    {canEdit || canDelete || renderRowActions ? (
+                      <TableHead className="sticky top-0 z-10 w-[180px] bg-[linear-gradient(180deg,rgba(247,244,235,0.98),rgba(255,255,255,0.92))] text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                        Actions
+                      </TableHead>
+                    ) : null}
                   </TableRow>
                 </TableHeader>
 
@@ -335,7 +347,7 @@ export function EntityManager<TItem>({
                     <TableRow>
                       <TableCell
                         className="h-24 text-center"
-                        colSpan={columns.length + 1}
+                        colSpan={columns.length + (canEdit || canDelete || renderRowActions ? 1 : 0)}
                       >
                         Loading...
                       </TableCell>
@@ -355,132 +367,138 @@ export function EntityManager<TItem>({
                             </TableCell>
                           ))}
 
-                          <TableCell>
-                            <div className="flex flex-col gap-2 sm:flex-row">
-                              <Dialog
-                                open={editingItemId === id}
-                                onOpenChange={handleEditOpenChange}
-                              >
-                                <DialogTrigger asChild>
+                          {canEdit || canDelete || renderRowActions ? (
+                            <TableCell>
+                              <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                                {canEdit ? (
+                                  <Dialog
+                                    open={editingItemId === id}
+                                    onOpenChange={handleEditOpenChange}
+                                  >
+                                    <DialogTrigger asChild>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        disabled={editingId === id}
+                                        onClick={() => handleEdit(item)}
+                                      >
+                                        {editingId === id ? "Saving..." : "Edit"}
+                                      </Button>
+                                    </DialogTrigger>
+
+                                    <DialogContent className="max-h-[90vh] overflow-y-auto rounded-[1.5rem] border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(249,247,241,0.98))] p-5 shadow-[0_40px_90px_-40px_rgba(16,28,56,0.45)] sm:rounded-[1.75rem] sm:p-6">
+                                      <DialogHeader>
+                                        <DialogTitle className="text-xl tracking-tight sm:text-2xl">
+                                          {updateLabel}
+                                        </DialogTitle>
+                                        <DialogDescription>
+                                          Update the details for this{" "}
+                                          {entityLabel.toLowerCase()}.
+                                        </DialogDescription>
+                                      </DialogHeader>
+
+                                      <form className="space-y-4" onSubmit={handleSubmit}>
+                                        <div className="grid grid-cols-1 gap-4">
+                                          {fields.map((field) => (
+                                            <div className="space-y-2" key={field.name}>
+                                              <Label htmlFor={`edit-${id}-${field.name}`}>
+                                                {field.label}
+                                              </Label>
+
+                                              {field.type === "select" ? (
+                                                <Select
+                                                  value={String(values[field.name] ?? "") || undefined}
+                                                  onValueChange={(value) =>
+                                                    handleChange(field, value)
+                                                  }
+                                                >
+                                                  <SelectTrigger id={`edit-${id}-${field.name}`}>
+                                                    <SelectValue
+                                                      placeholder={`Select ${field.label}`}
+                                                    />
+                                                  </SelectTrigger>
+                                                  <SelectContent>
+                                                    {field.options?.map((option) => (
+                                                      <SelectItem
+                                                        key={option.value}
+                                                        value={option.value}
+                                                      >
+                                                        {option.label}
+                                                      </SelectItem>
+                                                    ))}
+                                                  </SelectContent>
+                                                </Select>
+                                              ) : field.type === "checkbox" ? (
+                                                <label className="flex h-11 items-center gap-2 rounded-2xl border border-border/70 bg-white/80 px-4 text-sm">
+                                                  <input
+                                                    id={`edit-${id}-${field.name}`}
+                                                    type="checkbox"
+                                                    checked={Boolean(values[field.name])}
+                                                    onChange={(event) =>
+                                                      handleChange(field, event.target.checked)
+                                                    }
+                                                  />
+                                                  {field.checkboxLabel ?? field.label}
+                                                </label>
+                                              ) : (
+                                                <Input
+                                                  id={`edit-${id}-${field.name}`}
+                                                  type={field.type ?? "text"}
+                                                  className="h-11 rounded-2xl border-border/70 bg-white/80 px-4"
+                                                  value={String(values[field.name] ?? "")}
+                                                  placeholder={field.placeholder}
+                                                  required={field.required}
+                                                  onChange={(event) =>
+                                                    handleChange(field, event.target.value)
+                                                  }
+                                                />
+                                              )}
+                                            </div>
+                                          ))}
+                                        </div>
+
+                                        {error ? (
+                                          <p className="text-sm text-red-500">{error}</p>
+                                        ) : null}
+
+                                        <DialogFooter className="flex-col-reverse gap-2 sm:flex-row">
+                                          <DialogClose asChild>
+                                            <Button
+                                              type="button"
+                                              variant="outline"
+                                              className="w-full sm:w-auto"
+                                            >
+                                              Cancel
+                                            </Button>
+                                          </DialogClose>
+                                          <Button
+                                            disabled={isSubmitting}
+                                            type="submit"
+                                            className="w-full sm:w-auto"
+                                          >
+                                            {isSubmitting ? "Saving..." : updateLabel}
+                                          </Button>
+                                        </DialogFooter>
+                                      </form>
+                                    </DialogContent>
+                                  </Dialog>
+                                ) : null}
+
+                                {renderRowActions ? renderRowActions(item) : null}
+
+                                {onDelete && canDelete ? (
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    disabled={editingId === id}
-                                    onClick={() => handleEdit(item)}
+                                    disabled={deletingId === id}
+                                    onClick={() => onDelete(item)}
                                   >
-                                    {editingId === id ? "Saving..." : "Edit"}
+                                    {deletingId === id ? "Deleting..." : "Delete"}
                                   </Button>
-                                </DialogTrigger>
-
-                                <DialogContent className="max-h-[90vh] overflow-y-auto rounded-[1.5rem] border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(249,247,241,0.98))] p-5 shadow-[0_40px_90px_-40px_rgba(16,28,56,0.45)] sm:rounded-[1.75rem] sm:p-6">
-                                  <DialogHeader>
-                                    <DialogTitle className="text-xl tracking-tight sm:text-2xl">
-                                      {updateLabel}
-                                    </DialogTitle>
-                                    <DialogDescription>
-                                      Update the details for this{" "}
-                                      {entityLabel.toLowerCase()}.
-                                    </DialogDescription>
-                                  </DialogHeader>
-
-                                  <form className="space-y-4" onSubmit={handleSubmit}>
-                                    <div className="grid grid-cols-1 gap-4">
-                                      {fields.map((field) => (
-                                        <div className="space-y-2" key={field.name}>
-                                          <Label htmlFor={`edit-${id}-${field.name}`}>
-                                            {field.label}
-                                          </Label>
-
-                                          {field.type === "select" ? (
-                                            <Select
-                                              value={String(values[field.name] ?? "") || undefined}
-                                              onValueChange={(value) =>
-                                                handleChange(field, value)
-                                              }
-                                            >
-                                              <SelectTrigger id={`edit-${id}-${field.name}`}>
-                                                <SelectValue
-                                                  placeholder={`Select ${field.label}`}
-                                                />
-                                              </SelectTrigger>
-                                              <SelectContent>
-                                                {field.options?.map((option) => (
-                                                  <SelectItem
-                                                    key={option.value}
-                                                    value={option.value}
-                                                  >
-                                                    {option.label}
-                                                  </SelectItem>
-                                                ))}
-                                              </SelectContent>
-                                            </Select>
-                                          ) : field.type === "checkbox" ? (
-                                            <label className="flex h-11 items-center gap-2 rounded-2xl border border-border/70 bg-white/80 px-4 text-sm">
-                                              <input
-                                                id={`edit-${id}-${field.name}`}
-                                                type="checkbox"
-                                                checked={Boolean(values[field.name])}
-                                                onChange={(event) =>
-                                                  handleChange(field, event.target.checked)
-                                                }
-                                              />
-                                              {field.checkboxLabel ?? field.label}
-                                            </label>
-                                          ) : (
-                                            <Input
-                                              id={`edit-${id}-${field.name}`}
-                                              type={field.type ?? "text"}
-                                              className="h-11 rounded-2xl border-border/70 bg-white/80 px-4"
-                                              value={String(values[field.name] ?? "")}
-                                              placeholder={field.placeholder}
-                                              required={field.required}
-                                              onChange={(event) =>
-                                                handleChange(field, event.target.value)
-                                              }
-                                            />
-                                          )}
-                                        </div>
-                                      ))}
-                                    </div>
-
-                                    {error ? (
-                                      <p className="text-sm text-red-500">{error}</p>
-                                    ) : null}
-
-                                    <DialogFooter className="flex-col-reverse gap-2 sm:flex-row">
-                                      <DialogClose asChild>
-                                        <Button
-                                          type="button"
-                                          variant="outline"
-                                          className="w-full sm:w-auto"
-                                        >
-                                          Cancel
-                                        </Button>
-                                      </DialogClose>
-                                      <Button
-                                        disabled={isSubmitting}
-                                        type="submit"
-                                        className="w-full sm:w-auto"
-                                      >
-                                        {isSubmitting ? "Saving..." : updateLabel}
-                                      </Button>
-                                    </DialogFooter>
-                                  </form>
-                                </DialogContent>
-                              </Dialog>
-
-                              {onDelete ? (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  disabled={deletingId === id}
-                                  onClick={() => onDelete(item)}
-                                >
-                                  {deletingId === id ? "Deleting..." : "Delete"}
-                                </Button>
-                              ) : null}
-                            </div>
-                          </TableCell>
+                                ) : null}
+                              </div>
+                            </TableCell>
+                          ) : null}
                         </TableRow>
                       );
                     })
@@ -488,7 +506,7 @@ export function EntityManager<TItem>({
                     <TableRow>
                       <TableCell
                         className="h-24 text-center"
-                        colSpan={columns.length + 1}
+                        colSpan={columns.length + (canEdit || canDelete || renderRowActions ? 1 : 0)}
                       >
                         {emptyMessage}
                       </TableCell>

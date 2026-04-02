@@ -5,6 +5,7 @@ import { StandardResponse } from "@/type/shared";
 interface LoginDto {
   email: string;
   password: string;
+  role: string;
 }
 
 interface MemberLoginDto {
@@ -20,9 +21,11 @@ type AuthPayload = {
   access_token?: string;
   token?: string;
   user?: {
+    id?: string;
     email?: string;
     name?: string;
     memberId?: string;
+    regionId?: string;
     role: string;
   };
 };
@@ -33,6 +36,7 @@ type TokenPayload = {
   sub?: string;
   id?: string;
   memberId?: string;
+  regionId?: string;
   role?: string;
   email?: string;
   name?: string;
@@ -63,9 +67,24 @@ export const login = async (data: LoginDto) => {
   const response = await api.post<AuthResponse, LoginDto>("/auth/login", data);
 
   const token = response.data?.access_token ?? response.data?.token;
+  const tokenPayload = decodeTokenPayload(token);
   persistAuthSession({
     token,
-    user: response.data?.user,
+    user: {
+      id:
+        response.data?.user?.id ??
+        tokenPayload?.sub ??
+        tokenPayload?.id,
+      email: response.data?.user?.email ?? tokenPayload?.email ?? data.email,
+      name:
+        response.data?.user?.name ??
+        tokenPayload?.name ??
+        tokenPayload?.fullName ??
+        tokenPayload?.preferred_username,
+      memberId: response.data?.user?.memberId ?? tokenPayload?.memberId,
+      regionId: response.data?.user?.regionId ?? tokenPayload?.regionId,
+      role: response.data?.user?.role ?? tokenPayload?.role ?? data.role,
+    },
   });
 
   return response;
@@ -84,7 +103,9 @@ export const memberLogin = async (data: MemberLoginDto) => {
     token,
     user: {
       role: tokenPayload?.role ?? "MEMBER",
+      id: tokenPayload?.sub ?? tokenPayload?.id,
       memberId: tokenPayload?.memberId ?? tokenPayload?.sub ?? tokenPayload?.id,
+      regionId: tokenPayload?.regionId,
       name:
         tokenPayload?.name ??
         tokenPayload?.fullName ??

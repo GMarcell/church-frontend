@@ -16,7 +16,7 @@ export const menuItems = [
     title: "Dashboard",
     href: "/dashboard",
     icon: LayoutDashboard,
-    roles: ["ADMIN", "STAFF"] satisfies AppRole[],
+    roles: ["ADMIN", "STAFF", "COORDINATOR"] satisfies AppRole[],
   },
   {
     title: "Branches",
@@ -28,19 +28,19 @@ export const menuItems = [
     title: "Regions",
     href: "/dashboard/regions",
     icon: Compass,
-    roles: ["ADMIN", "STAFF"] satisfies AppRole[],
+    roles: ["ADMIN", "STAFF", "COORDINATOR"] satisfies AppRole[],
   },
   {
     title: "Families",
     href: "/dashboard/families",
     icon: HeartHandshake,
-    roles: ["ADMIN", "STAFF"] satisfies AppRole[],
+    roles: ["ADMIN", "STAFF", "COORDINATOR"] satisfies AppRole[],
   },
   {
     title: "Members",
     href: "/dashboard/members",
     icon: Users,
-    roles: ["ADMIN", "STAFF", "MEMBER"] satisfies AppRole[],
+    roles: ["ADMIN", "STAFF", "COORDINATOR", "MEMBER"] satisfies AppRole[],
   },
   {
     title: "Pelkat Members",
