@@ -7,11 +7,6 @@ interface LoginDto {
   password: string;
 }
 
-interface MemberLoginDto {
-  name: string;
-  password: string;
-}
-
 interface RegisterDto extends LoginDto {
   role: string;
 }
@@ -83,34 +78,6 @@ export const login = async (data: LoginDto) => {
       memberId: response.data?.user?.memberId ?? tokenPayload?.memberId,
       regionId: response.data?.user?.regionId ?? tokenPayload?.regionId,
       role: response.data?.user?.role ?? tokenPayload?.role ?? "",
-    },
-  });
-
-  return response;
-};
-
-export const memberLogin = async (data: MemberLoginDto) => {
-  const response = await api.post<AuthResponse, MemberLoginDto>(
-    "/auth/member-login",
-    data,
-  );
-
-  const token = response.data?.access_token ?? response.data?.token;
-  const tokenPayload = decodeTokenPayload(token);
-
-  persistAuthSession({
-    token,
-    user: {
-      role: tokenPayload?.role ?? "MEMBER",
-      id: tokenPayload?.sub ?? tokenPayload?.id,
-      memberId: tokenPayload?.memberId ?? tokenPayload?.sub ?? tokenPayload?.id,
-      regionId: tokenPayload?.regionId,
-      name:
-        tokenPayload?.name ??
-        tokenPayload?.fullName ??
-        tokenPayload?.preferred_username ??
-        data.name,
-      email: tokenPayload?.email,
     },
   });
 

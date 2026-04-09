@@ -46,16 +46,12 @@ const memberRoleOptions = [
 ];
 
 const pelkatBadgeClasses: Record<string, string> = {
-  "Pelayanan Anak":
-    "border-emerald-200 bg-emerald-50 text-emerald-700",
-  "Persekutuan Taruna":
-    "border-amber-200 bg-amber-50 text-amber-700",
-  "Gerakan Pemuda":
-    "border-blue-200 bg-blue-50 text-blue-700",
+  "Pelayanan Anak": "border-emerald-200 bg-emerald-50 text-emerald-700",
+  "Persekutuan Taruna": "border-amber-200 bg-amber-50 text-amber-700",
+  "Gerakan Pemuda": "border-blue-200 bg-blue-50 text-blue-700",
   "Persekutuan Kaum Perempuan":
     "border-purple-200 bg-purple-50 text-purple-700",
-  "Persekutuan kaum Bapak":
-    "border-slate-200 bg-slate-100 text-slate-700",
+  "Persekutuan kaum Bapak": "border-slate-200 bg-slate-100 text-slate-700",
   "Persekutuan kaum Lanjut Usia":
     "border-orange-200 bg-orange-50 text-orange-700",
 };
@@ -91,7 +87,9 @@ export default function MembersPage() {
       return families;
     }
 
-    return families.filter((family) => accessibleRegionIds.has(family.regionId));
+    return families.filter((family) =>
+      accessibleRegionIds.has(family.regionId),
+    );
   }, [
     currentUser?.id,
     currentUser?.memberId,
@@ -112,7 +110,12 @@ export default function MembersPage() {
           accessibleFamilyIds.has(member.familyId) ||
           member.family?.regionId === currentUser?.regionId,
       ),
-    [accessibleFamilyIds, currentUser?.regionId, isCoordinator, memberResult?.items],
+    [
+      accessibleFamilyIds,
+      currentUser?.regionId,
+      isCoordinator,
+      memberResult?.items,
+    ],
   );
   const createMember = useCreateMember();
   const updateMember = useUpdateMember();
@@ -135,6 +138,16 @@ export default function MembersPage() {
       updateLabel="Update Member"
       searchPlaceholder="Search by name, email, phone, or family"
       fields={[
+        {
+          name: "familyId",
+          label: "Family",
+          type: "select",
+          required: true,
+          options: accessibleFamilies.map((family) => ({
+            label: family.familyName,
+            value: family.id,
+          })),
+        },
         {
           name: "name",
           label: "Full Name",
@@ -176,16 +189,6 @@ export default function MembersPage() {
           type: "select",
           required: true,
           options: memberRoleOptions,
-        },
-        {
-          name: "familyId",
-          label: "Family",
-          type: "select",
-          required: true,
-          options: accessibleFamilies.map((family) => ({
-            label: family.familyName,
-            value: family.id,
-          })),
         },
         {
           name: "isActive",
@@ -256,10 +259,7 @@ export default function MembersPage() {
             return (
               <Badge
                 variant="outline"
-                className={cn(
-                  "py-1",
-                  statusBadgeClasses[status],
-                )}
+                className={cn("py-1", statusBadgeClasses[status])}
               >
                 {status}
               </Badge>

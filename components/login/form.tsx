@@ -12,15 +12,10 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  LoginFormValues,
-  loginSchema,
-  MemberLoginFormValues,
-  memberLoginSchema,
-} from "@/schemas/auth.schema";
+import { LoginFormValues, loginSchema } from "@/schemas/auth.schema";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { login, memberLogin } from "@/services/auth";
+import { login } from "@/services/auth";
 import { useRouter } from "next/navigation";
 import { ButtonGroup } from "../ui/button-group";
 import { Eye, EyeClosed } from "lucide-react";
@@ -28,14 +23,9 @@ import { Eye, EyeClosed } from "lucide-react";
 export default function LoginForm() {
   const router = useRouter();
   const [isShow, setIsShow] = useState(false);
-  const [mode, setMode] = useState<"admin" | "member">("admin");
 
   const adminForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
-  });
-
-  const memberForm = useForm<MemberLoginFormValues>({
-    resolver: zodResolver(memberLoginSchema),
   });
 
   const {
@@ -43,12 +33,6 @@ export default function LoginForm() {
     handleSubmit,
     formState: { errors, isSubmitting },
   } = adminForm;
-
-  const {
-    register: registerMember,
-    handleSubmit: handleSubmitMember,
-    formState: { errors: memberErrors, isSubmitting: isMemberSubmitting },
-  } = memberForm;
 
   const onSubmit = async (values: LoginFormValues) => {
     try {
@@ -59,143 +43,65 @@ export default function LoginForm() {
     }
   };
 
-  const onSubmitMember = async (values: MemberLoginFormValues) => {
-    try {
-      await memberLogin(values);
-      router.push("/dashboard/members");
-    } catch (error) {
-      console.error("Member login failed:", error);
-    }
-  };
-
   return (
     <div className="flex justify-center items-center h-full">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <div className="flex rounded-full border border-border/70 bg-white/70 p-1">
-            <button
-              type="button"
-              className={`flex-1 rounded-full px-4 py-2 text-sm transition ${mode === "admin" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
-              onClick={() => setMode("admin")}
-            >
-              Admin / Coordinator
-            </button>
-            <button
-              type="button"
-              className={`flex-1 rounded-full px-4 py-2 text-sm transition ${mode === "member" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
-              onClick={() => setMode("member")}
-            >
-              Member
-            </button>
-          </div>
-
-          <CardTitle>
-            {mode === "admin" ? "Login to your account" : "Member self service"}
-          </CardTitle>
+          <CardTitle>Login to your account</CardTitle>
           <CardDescription>
-            {mode === "admin"
-              ? "Enter your email and password to access the dashboard."
-              : "Login with your full name and birth date to update your own profile."}
+            Enter your email and password to access the dashboard.
           </CardDescription>
         </CardHeader>
 
         <CardContent>
-          {mode === "admin" ? (
-            <form onSubmit={handleSubmit(onSubmit)}>
-              <div className="flex flex-col gap-6">
-                <div className="grid gap-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="admin@example.com"
-                    {...register("email")}
-                  />
-                  {errors.email && (
-                    <p className="text-sm text-red-500">
-                      {errors.email.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="grid gap-2">
-                  <Label htmlFor="password">Password</Label>
-                  <ButtonGroup className=" w-full">
-                    <Input
-                      id="password"
-                      type={isShow ? "text" : "password"}
-                      className="border border-r-0"
-                      {...register("password")}
-                    />
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="rounded border border-l-0"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setIsShow((prev) => !prev);
-                      }}
-                    >
-                      {isShow ? <Eye /> : <EyeClosed />}
-                    </Button>
-                  </ButtonGroup>
-                  {errors.password && (
-                    <p className="text-sm text-red-500">
-                      {errors.password.message}
-                    </p>
-                  )}
-                </div>
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <div className="flex flex-col gap-6">
+              <div className="grid gap-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="admin@example.com"
+                  {...register("email")}
+                />
+                {errors.email && (
+                  <p className="text-sm text-red-500">{errors.email.message}</p>
+                )}
               </div>
 
-              <Button
-                type="submit"
-                className="w-full mt-6"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? "Logging in..." : "Login"}
-              </Button>
-            </form>
-          ) : (
-            <form onSubmit={handleSubmitMember(onSubmitMember)}>
-              <div className="flex flex-col gap-6">
-                <div className="grid gap-2">
-                  <Label htmlFor="member-name">Full Name</Label>
+              <div className="grid gap-2">
+                <Label htmlFor="password">Password</Label>
+                <ButtonGroup className=" w-full">
                   <Input
-                    id="member-name"
-                    placeholder="John Example"
-                    {...registerMember("name")}
+                    id="password"
+                    type={isShow ? "text" : "password"}
+                    className="border border-r-0"
+                    {...register("password")}
                   />
-                  {memberErrors.name && (
-                    <p className="text-sm text-red-500">
-                      {memberErrors.name.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="grid gap-2">
-                  <Label htmlFor="member-password">Birth Date</Label>
-                  <Input
-                    id="member-password"
-                    placeholder="15-01-1990"
-                    {...registerMember("password")}
-                  />
-                  {memberErrors.password && (
-                    <p className="text-sm text-red-500">
-                      {memberErrors.password.message}
-                    </p>
-                  )}
-                </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="rounded border border-l-0"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setIsShow((prev) => !prev);
+                    }}
+                  >
+                    {isShow ? <Eye /> : <EyeClosed />}
+                  </Button>
+                </ButtonGroup>
+                {errors.password && (
+                  <p className="text-sm text-red-500">
+                    {errors.password.message}
+                  </p>
+                )}
               </div>
+            </div>
 
-              <Button
-                type="submit"
-                className="w-full mt-6"
-                disabled={isMemberSubmitting}
-              >
-                {isMemberSubmitting ? "Logging in..." : "Login as Member"}
-              </Button>
-            </form>
-          )}
+            <Button type="submit" className="w-full mt-6" disabled={isSubmitting}>
+              {isSubmitting ? "Logging in..." : "Login"}
+            </Button>
+          </form>
         </CardContent>
 
         <CardFooter />

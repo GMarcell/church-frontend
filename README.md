@@ -1,100 +1,37 @@
 # Church Frontend
 
-A church management dashboard built with Next.js for handling branches, regions, families, members, attendance, and user access.
+Frontend dashboard for the church management system. This app is built with Next.js and provides authenticated, role-based access to operational modules such as branches, regions, families, members, attendance, users, and access settings.
 
-This frontend connects to a backend API under the `/api` prefix and provides role-based access for `ADMIN`, `STAFF`, `COORDINATOR`, and `MEMBER` users.
+Additional docs:
 
-## Overview
+- [docs/ARCHITECTURE.md](/home/admin-ubuntu/grand/church-sytem/church-frontend/docs/ARCHITECTURE.md)
+- [docs/API.md](/home/admin-ubuntu/grand/church-sytem/church-frontend/docs/API.md)
 
-The application is designed to support church administration workflows such as:
+## What This Repo Does
 
-- Managing branches and regions
-- Registering families and household members
-- Editing family members directly from the families menu
-- Assigning region coordinators
-- Viewing member statistics and pelkat summaries
-- Recording attendance
-- Managing dashboard users and roles
-- Allowing members to update their own profile data
+The application is designed for church administration and member data workflows. It includes:
 
-## Main Modules
+- Authentication with email and password
+- Dashboard pages grouped by ministry operations
+- Role-based route protection for `ADMIN`, `STAFF`, `COORDINATOR`, and `MEMBER`
+- CRUD-style management flows backed by an external API
+- Configurable page access rules from the Settings screen
+- Responsive dashboard navigation for desktop and mobile
 
-- `Dashboard`: overview cards for branches, regions, and members
-- `Branches`: create, update, list, and delete branches
-- `Regions`: manage regions and assign coordinators
-- `Families`: manage families and edit family members from the family screen
-- `Members`: manage member records and member self-service
-- `Pelkat Members`: browse members by pelkat
-- `Attendance`: track service attendance totals
-- `Users`: manage admin, staff, and coordinator accounts
-- `Settings`: role-access configuration area for admin users
+## Stack
 
-## Roles
-
-- `ADMIN`: full dashboard access
-- `STAFF`: operational access to most management screens
-- `COORDINATOR`: scoped access to their assigned region data
-- `MEMBER`: self-service access to personal and family member data
-
-Route access is enforced in the frontend through the RBAC utilities in `lib/rbac.ts` and the guard in `components/auth/rbac-guard.tsx`.
-
-## Tech Stack
-
-- Next.js 16
+- Next.js 16 with App Router
 - React 19
 - TypeScript
 - Tailwind CSS 4
-- TanStack Query
 - Axios
+- TanStack Query
+- TanStack Table
 - React Hook Form
 - Zod
-- Radix UI / shadcn-style UI components
+- Radix UI primitives with local UI components
 
-## Project Structure
-
-```text
-app/
-  dashboard/           Dashboard routes
-  public/login/        Login screen
-components/
-  attendance/          Attendance UI
-  branches/            Branch management UI
-  dashboard/           Stats and reusable entity manager
-  families/            Family management UI
-  login/               Authentication form
-  members/             Member management and self-service
-  regions/             Region management UI
-  users/               User management UI
-  ui/                  Shared UI primitives
-services/              API client modules by resource
-type/                  Shared TypeScript types
-lib/                   Axios setup, auth session, RBAC, helpers
-nav/                   Sidebar menu definitions
-schemas/               Validation schemas
-```
-
-## API Integration
-
-The frontend expects a backend base URL through:
-
-```env
-NEXT_PUBLIC_API_URL=http://localhost:3000/api/
-```
-
-Example backend routes used by this project:
-
-- `/auth/login`
-- `/auth/member-login`
-- `/v1/branches`
-- `/v1/regions`
-- `/v1/families`
-- `/v1/member`
-- `/attendances`
-- `/users`
-
-Authentication is token-based. The app stores the access token in local storage and attaches it automatically through the Axios interceptor in `lib/axios.ts`.
-
-## Getting Started
+## Quick Start
 
 ### 1. Install dependencies
 
@@ -104,13 +41,13 @@ npm install
 
 ### 2. Configure environment variables
 
-Create or update `.env`:
+Create `.env.local` and set:
 
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:3000/api/
 ```
 
-If you want to use a deployed backend instead of local development, point this value to that API base URL.
+`NEXT_PUBLIC_API_URL` should point to the backend API base URL used by this frontend.
 
 ### 3. Start the development server
 
@@ -120,7 +57,7 @@ npm run dev
 
 Open `http://localhost:3000`.
 
-The app redirects `/` to `/public/login`.
+The root route `/` redirects to `/public/login`.
 
 ## Available Scripts
 
@@ -131,36 +68,252 @@ npm run start
 npm run lint
 ```
 
-## Authentication Notes
+## Authentication Flow
 
-- Admin and staff-style login uses email and password
-- Member login uses full name and birth date format as provided by the backend flow
-- User session data is persisted in the browser via `lib/auth-session.ts`
+- The login page lives at `/public/login`
+- Users sign in with email and password
+- On successful login, the frontend stores:
+  - `access_token` in local storage and a cookie
+  - serialized user data in local storage
+  - role and profile summary cookies used by route protection
+- Axios attaches the bearer token automatically on requests
+- A `401` response clears the session and redirects the browser back to `/public/login`
 
-## Development Notes
+Relevant files:
 
-- Data fetching is organized per resource inside `services/`
-- Generic CRUD screens reuse `components/dashboard/entity-manager.tsx`
-- API responses are normalized with helper utilities in `lib/helper.ts`
-- Some screens intentionally filter data client-side based on the logged-in role
+- [components/login/form.tsx](/home/admin-ubuntu/grand/church-sytem/church-frontend/components/login/form.tsx)
+- [services/auth.ts](/home/admin-ubuntu/grand/church-sytem/church-frontend/services/auth.ts)
+- [lib/auth-session.ts](/home/admin-ubuntu/grand/church-sytem/church-frontend/lib/auth-session.ts)
+- [lib/axios.ts](/home/admin-ubuntu/grand/church-sytem/church-frontend/lib/axios.ts)
 
-## Current Highlights
+## Roles And Access Control
 
-- Family member editing is available directly from the Families menu
-- Member self-service includes household editing for family heads
-- Dashboard statistics summarize branches, regions, members, and pelkat groups
+Supported roles:
 
-## Known Notes
+- `ADMIN`
+- `STAFF`
+- `COORDINATOR`
+- `MEMBER`
 
-- `npm run lint` currently reports an existing warning in `components/datatable.tsx` related to `useReactTable()` and the React Compiler
+Access control is enforced in two layers:
 
-## Future Improvements
+1. Edge-style request protection in [proxy.ts](/home/admin-ubuntu/grand/church-sytem/church-frontend/proxy.ts)
+2. Client-side route guarding in [components/auth/rbac-guard.tsx](/home/admin-ubuntu/grand/church-sytem/church-frontend/components/auth/rbac-guard.tsx)
 
-- Add automated tests
-- Add giving module screens
-- Improve response normalization for more backend payload variations
-- Add richer empty states and loading states
+Default route permissions are defined in [lib/rbac.ts](/home/admin-ubuntu/grand/church-sytem/church-frontend/lib/rbac.ts).
+
+The Settings page allows admins to change which roles can access each dashboard page. Those overrides are stored in local storage and mirrored to cookies so redirects and client UI stay in sync.
+
+Relevant files:
+
+- [lib/rbac.ts](/home/admin-ubuntu/grand/church-sytem/church-frontend/lib/rbac.ts)
+- [lib/rbac-config.ts](/home/admin-ubuntu/grand/church-sytem/church-frontend/lib/rbac-config.ts)
+- [components/settings/index.tsx](/home/admin-ubuntu/grand/church-sytem/church-frontend/components/settings/index.tsx)
+
+## Routes
+
+Public routes:
+
+- `/`
+- `/public`
+- `/public/login`
+
+Dashboard routes:
+
+- `/dashboard`
+- `/dashboard/branches`
+- `/dashboard/regions`
+- `/dashboard/families`
+- `/dashboard/members`
+- `/dashboard/pelkat-members`
+- `/dashboard/attendance`
+- `/dashboard/users`
+- `/dashboard/settings`
+
+Special route:
+
+- `/dashboard/evets` redirects to `/dashboard/attendance`
+
+## Main Modules
+
+### Dashboard
+
+Summary cards and statistics for operational visibility.
+
+Files:
+
+- [app/dashboard/page.tsx](/home/admin-ubuntu/grand/church-sytem/church-frontend/app/dashboard/page.tsx)
+- [components/dashboard/index.tsx](/home/admin-ubuntu/grand/church-sytem/church-frontend/components/dashboard/index.tsx)
+
+### Branches
+
+Branch listing and branch management flows.
+
+Files:
+
+- [app/dashboard/branches/page.tsx](/home/admin-ubuntu/grand/church-sytem/church-frontend/app/dashboard/branches/page.tsx)
+- [components/branches/index.tsx](/home/admin-ubuntu/grand/church-sytem/church-frontend/components/branches/index.tsx)
+- [services/branch.ts](/home/admin-ubuntu/grand/church-sytem/church-frontend/services/branch.ts)
+
+### Regions
+
+Region management and coordinator-related workflows.
+
+Files:
+
+- [app/dashboard/regions/page.tsx](/home/admin-ubuntu/grand/church-sytem/church-frontend/app/dashboard/regions/page.tsx)
+- [components/regions/index.tsx](/home/admin-ubuntu/grand/church-sytem/church-frontend/components/regions/index.tsx)
+- [services/region.ts](/home/admin-ubuntu/grand/church-sytem/church-frontend/services/region.ts)
+
+### Families
+
+Family records and household-oriented editing flows.
+
+Files:
+
+- [app/dashboard/families/page.tsx](/home/admin-ubuntu/grand/church-sytem/church-frontend/app/dashboard/families/page.tsx)
+- [components/families/index.tsx](/home/admin-ubuntu/grand/church-sytem/church-frontend/components/families/index.tsx)
+- [services/family.ts](/home/admin-ubuntu/grand/church-sytem/church-frontend/services/family.ts)
+
+### Members
+
+Member data management plus member-facing self-service functionality.
+
+Files:
+
+- [app/dashboard/members/page.tsx](/home/admin-ubuntu/grand/church-sytem/church-frontend/app/dashboard/members/page.tsx)
+- [components/members/index.tsx](/home/admin-ubuntu/grand/church-sytem/church-frontend/components/members/index.tsx)
+- [components/members/self-service.tsx](/home/admin-ubuntu/grand/church-sytem/church-frontend/components/members/self-service.tsx)
+- [services/member.ts](/home/admin-ubuntu/grand/church-sytem/church-frontend/services/member.ts)
+
+### Pelkat Members
+
+Pelkat-oriented member browsing screen.
+
+Files:
+
+- [app/dashboard/pelkat-members/page.tsx](/home/admin-ubuntu/grand/church-sytem/church-frontend/app/dashboard/pelkat-members/page.tsx)
+- [components/members/pelkat-menu.tsx](/home/admin-ubuntu/grand/church-sytem/church-frontend/components/members/pelkat-menu.tsx)
+
+### Attendance
+
+Attendance records and summary views.
+
+Files:
+
+- [app/dashboard/attendance/page.tsx](/home/admin-ubuntu/grand/church-sytem/church-frontend/app/dashboard/attendance/page.tsx)
+- [components/attendance/index.tsx](/home/admin-ubuntu/grand/church-sytem/church-frontend/components/attendance/index.tsx)
+- [services/attendance.ts](/home/admin-ubuntu/grand/church-sytem/church-frontend/services/attendance.ts)
+
+### Users
+
+Admin-facing user management.
+
+Files:
+
+- [app/dashboard/users/page.tsx](/home/admin-ubuntu/grand/church-sytem/church-frontend/app/dashboard/users/page.tsx)
+- [components/users/index.tsx](/home/admin-ubuntu/grand/church-sytem/church-frontend/components/users/index.tsx)
+- [services/user.ts](/home/admin-ubuntu/grand/church-sytem/church-frontend/services/user.ts)
+
+### Settings
+
+Role access configuration for dashboard pages.
+
+Files:
+
+- [app/dashboard/settings/page.tsx](/home/admin-ubuntu/grand/church-sytem/church-frontend/app/dashboard/settings/page.tsx)
+- [components/settings/index.tsx](/home/admin-ubuntu/grand/church-sytem/church-frontend/components/settings/index.tsx)
+
+## App Structure
+
+```text
+app/
+  dashboard/           Protected dashboard routes
+  public/login/        Public login page
+components/
+  attendance/          Attendance feature UI
+  auth/                Client-side RBAC guard
+  branches/            Branch feature UI
+  dashboard/           Dashboard stats and shared CRUD helpers
+  families/            Family feature UI
+  layout/              Navbar and sidebar
+  login/               Login form
+  members/             Member feature UI and self-service
+  regions/             Region feature UI
+  settings/            Role access management screen
+  ui/                  Shared UI building blocks
+  users/               User management UI
+lib/
+  api.ts               Small typed wrapper around Axios methods
+  auth-session.ts      Session persistence and user store hooks
+  axios.ts             Axios instance and auth interceptors
+  query-providers.tsx  React Query provider
+  rbac.ts              Roles, route permissions, access helpers
+  rbac-config.ts       Stored page-access overrides
+nav/
+  const.ts             Sidebar menu definition
+schemas/
+  auth.schema.ts       Login validation schema
+services/
+  *.ts                 API calls grouped by resource
+type/
+  *.ts                 Shared feature types
+proxy.ts               Route protection and redirect logic
+```
+
+## Data Layer
+
+The app uses a simple service pattern:
+
+- `services/*.ts` defines API calls by resource
+- `lib/api.ts` wraps the shared Axios client with typed helpers
+- `lib/axios.ts` configures base URL, credentials, auth header injection, and `401` handling
+
+This keeps feature components focused on UI while service files handle HTTP details.
+
+## Navigation And Layout
+
+The dashboard shell is composed from:
+
+- [app/dashboard/layout.tsx](/home/admin-ubuntu/grand/church-sytem/church-frontend/app/dashboard/layout.tsx)
+- [components/layout/navbar.tsx](/home/admin-ubuntu/grand/church-sytem/church-frontend/components/layout/navbar.tsx)
+- [components/layout/sidebar.tsx](/home/admin-ubuntu/grand/church-sytem/church-frontend/components/layout/sidebar.tsx)
+
+The sidebar menu items come from [nav/const.ts](/home/admin-ubuntu/grand/church-sytem/church-frontend/nav/const.ts) and are filtered by role before rendering.
+
+## Backend Expectations
+
+This frontend expects a backend that provides authentication and resource endpoints. Current service files indicate integration points for:
+
+- `/auth/login`
+- branch endpoints
+- region endpoints
+- family endpoints
+- member endpoints
+- attendance endpoints
+- user endpoints
+
+The exact path shapes are defined inside the files under [services](/home/admin-ubuntu/grand/church-sytem/church-frontend/services).
+
+## Notes For Development
+
+- The repo currently has no automated test suite configured
+- `npm run lint` succeeds with one existing warning in [components/datatable.tsx](/home/admin-ubuntu/grand/church-sytem/church-frontend/components/datatable.tsx#L48)
+- Session and access control behavior depend on both local storage and cookies
+- Role access changes made in Settings are local to the current browser unless the backend later persists them
+
+## Suggested Onboarding Path
+
+If you are new to the codebase, read these files first:
+
+1. [app/layout.tsx](/home/admin-ubuntu/grand/church-sytem/church-frontend/app/layout.tsx)
+2. [app/dashboard/layout.tsx](/home/admin-ubuntu/grand/church-sytem/church-frontend/app/dashboard/layout.tsx)
+3. [nav/const.ts](/home/admin-ubuntu/grand/church-sytem/church-frontend/nav/const.ts)
+4. [lib/rbac.ts](/home/admin-ubuntu/grand/church-sytem/church-frontend/lib/rbac.ts)
+5. [lib/auth-session.ts](/home/admin-ubuntu/grand/church-sytem/church-frontend/lib/auth-session.ts)
+6. [services/auth.ts](/home/admin-ubuntu/grand/church-sytem/church-frontend/services/auth.ts)
+7. One feature module such as [components/members/index.tsx](/home/admin-ubuntu/grand/church-sytem/church-frontend/components/members/index.tsx)
 
 ## License
 
-This project is currently private and intended for internal church system use.
+Private internal project.

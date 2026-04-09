@@ -27,7 +27,6 @@ export const defaultProtectedRoutes: ProtectedRoute[] = [
   { path: "/dashboard/attendance", roles: ["ADMIN", "STAFF"] },
   { path: "/dashboard/users", roles: ["ADMIN"] },
   { path: "/dashboard/settings", roles: ["ADMIN"] },
-  { path: "/dashboard/giving", roles: ["ADMIN"] },
 ];
 
 export const protectedRoutes = defaultProtectedRoutes;

@@ -45,7 +45,7 @@ export function Navbar({ onMenuClick }: NavbarProps) {
             variant="outline"
             size="icon"
             onClick={onMenuClick}
-            className="flex h-11 w-11 shrink-0 rounded-2xl border border-border/80 bg-white/75 shadow-sm md:hidden"
+            className="flex h-11 w-11 shrink-0 rounded-2xl border border-border/80 bg-white/75 shadow-sm lg:hidden"
             aria-label="Open navigation menu"
           >
             <Menu className="h-5 w-5" />
@@ -61,12 +61,12 @@ export function Navbar({ onMenuClick }: NavbarProps) {
           </div>
         </div>
 
-        <div className="hidden rounded-full border border-border/70 bg-white/70 px-4 py-2 text-sm text-muted-foreground shadow-sm backdrop-blur lg:flex">
+        <div className="hidden rounded-full border border-border/70 bg-white/70 px-4 py-2 text-sm text-muted-foreground shadow-sm backdrop-blur xl:flex">
           Ministry records, people, and branch operations
         </div>
 
         <div className="flex w-full items-center justify-end gap-3 sm:gap-4 md:w-auto">
-          <div className="hidden text-right md:block">
+          <div className="hidden text-right lg:block">
             <p className="text-sm font-medium">{currentUser?.role ?? "User"}</p>
             <p className="text-xs text-muted-foreground">
               {currentUser?.email ?? currentUser?.name ?? "No profile"}

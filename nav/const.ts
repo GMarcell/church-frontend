@@ -4,7 +4,6 @@ import {
   Church,
   Compass,
   HeartHandshake,
-  HandCoins,
   LayoutDashboard,
   Settings,
   ShieldUser,
@@ -58,12 +57,6 @@ export const menuItems = [
     title: "Users",
     href: "/dashboard/users",
     icon: ShieldUser,
-    roles: ["ADMIN"] satisfies AppRole[],
-  },
-  {
-    title: "Giving",
-    href: "/dashboard/giving",
-    icon: HandCoins,
     roles: ["ADMIN"] satisfies AppRole[],
   },
   {

@@ -26,16 +26,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { getPelkatLabel, useMembersByPelkat, usePelkatCount } from "@/services/member";
+import {
+  getPelkatLabel,
+  useMembersByPelkat,
+  usePelkatCount,
+} from "@/services/member";
 import { toTitleCase } from "@/lib/helper";
 
 const pelkatOptions = [
   "Pelayanan Anak",
-  "Remaja",
+  "Persekutuan Remaja",
   "Gerakan Pemuda",
-  "Persekutuan Kaum Bapa",
-  "Persekutuan Wanita",
-  "Lansia",
+  "Persekutuan Kaum Bapak",
+  "Persekutuan Kaum Perempuan",
+  "Persekutuan Kaum Lanjut Usia",
 ];
 
 export default function PelkatMenu() {
@@ -54,7 +58,9 @@ export default function PelkatMenu() {
   const members = data?.items ?? [];
   const pagination = data?.meta;
   const canGoPrevious = (pagination?.page ?? 1) > 1;
-  const canGoNext = pagination ? pagination.page < pagination.totalPages : false;
+  const canGoNext = pagination
+    ? pagination.page < pagination.totalPages
+    : false;
   const activePelkatLabel = getPelkatLabel(activePelkat);
 
   const summary = useMemo(() => {
@@ -65,7 +71,15 @@ export default function PelkatMenu() {
       return `Loading members for ${activePelkatLabel}...`;
     }
     return `${pelkatCount?.total ?? pagination?.total ?? members.length} members found for ${activePelkatLabel}.`;
-  }, [activePelkat, activePelkatLabel, isFetching, isLoading, members.length, pagination?.total, pelkatCount?.total]);
+  }, [
+    activePelkat,
+    activePelkatLabel,
+    isFetching,
+    isLoading,
+    members.length,
+    pagination?.total,
+    pelkatCount?.total,
+  ]);
 
   const handlePelkatSelect = (value: string) => {
     setSelectedPelkat(value);
@@ -137,7 +151,8 @@ export default function PelkatMenu() {
 
             {pagination ? (
               <div className="rounded-2xl border border-border/70 bg-white/70 px-4 py-2 text-sm text-muted-foreground sm:rounded-full">
-                Page {pagination.page} of {pagination.totalPages} • {pelkatCount?.total ?? pagination.total} members
+                Page {pagination.page} of {pagination.totalPages} •{" "}
+                {pelkatCount?.total ?? pagination.total} members
               </div>
             ) : null}
           </div>
@@ -182,7 +197,10 @@ export default function PelkatMenu() {
                     </TableRow>
                   ) : error ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="h-24 text-center text-red-500">
+                      <TableCell
+                        colSpan={7}
+                        className="h-24 text-center text-red-500"
+                      >
                         {error instanceof Error
                           ? error.message
                           : "Failed to load members for this pelkat."}
@@ -195,9 +213,15 @@ export default function PelkatMenu() {
                         <TableCell>{toTitleCase(member.gender)}</TableCell>
                         <TableCell>{member.phone}</TableCell>
                         <TableCell>{member.email}</TableCell>
-                        <TableCell>{toTitleCase(member.role.replaceAll("_", " "))}</TableCell>
-                        <TableCell>{member.family?.familyName ?? member.familyId}</TableCell>
-                        <TableCell>{member.isActive ? "Active" : "Inactive"}</TableCell>
+                        <TableCell>
+                          {toTitleCase(member.role.replaceAll("_", " "))}
+                        </TableCell>
+                        <TableCell>
+                          {member.family?.familyName ?? member.familyId}
+                        </TableCell>
+                        <TableCell>
+                          {member.isActive ? "Active" : "Inactive"}
+                        </TableCell>
                       </TableRow>
                     ))
                   ) : (
